@@ -39,7 +39,6 @@ func (op elNeOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U
 	if err != nil {
 		return retVal, err
 	}
-	e = e.BasicEng()
 
 	asSame := fo.AsType == a.Dtype()
 	toBroadcast := fo.Broadcast
@@ -77,7 +76,6 @@ func (op elNeOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, e
 	if err != nil {
 		return retVal, err
 	}
-	e = e.BasicEng()
 
 	toBroadcast := fo.Broadcast
 
