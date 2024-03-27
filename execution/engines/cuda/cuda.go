@@ -86,10 +86,6 @@ func New[DT any, T tensor.Basic[DT]](state *EngineState) *Engine[DT, T] {
 
 func (e *Engine[DT, T]) Workhorse() tensor.Engine { return e }
 
-func (e *Engine[DT, T]) BasicEng() tensor.Engine {
-	return &Engine[DT, tensor.Basic[DT]]{EngineState: e.EngineState}
-}
-
 // IsInitialized returns true when the engine has been initialized
 func (e *Engine[DT, T]) IsInitialized() bool {
 	e.Lock()

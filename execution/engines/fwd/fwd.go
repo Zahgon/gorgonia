@@ -26,11 +26,6 @@ func New[DT any, T tensor.Basic[DT]]() *Engine[DT, T] {
 	}
 }
 
-func (e *Engine[DT, T]) BasicEng() tensor.Engine {
-	//return &FwdEngine[DT, tensor.Basic[DT]]{StandardEngine: e.StandardEngine.BasicEng().(StandardEngine[DT, tensor.Basic[DT]]), g: e.g}
-	return e
-}
-
 func (e *Engine[DT, T]) Graph() *exprgraph.Graph { return e.g }
 
 func (e *Engine[DT, T]) SetGraph(g *exprgraph.Graph) { e.g = g }

@@ -65,14 +65,6 @@ func NewRx[DT tensor.Num, T tensor.Basic[DT]](e StandardEngine[DT, T], g *exprgr
 	return eng
 }
 
-func (e *RxEngine[DT, T]) BasicEng() tensor.Engine {
-	return &RxEngine[DT, tensor.Basic[DT]]{
-		StandardEngine: e.StandardEngine.BasicEng().(StandardEngine[DT, tensor.Basic[DT]]),
-		g:              e.g,
-		q:              e.q,
-	}
-}
-
 func (e *RxEngine[DT, T]) Graph() *exprgraph.Graph { return e.g }
 
 func (e *RxEngine[DT, T]) SetGraph(g *exprgraph.Graph) { e.g = g }

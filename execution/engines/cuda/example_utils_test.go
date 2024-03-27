@@ -201,8 +201,8 @@ func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gor
 	_, bok := b.Engine().Workhorse().(tensor.BLA[DT, T])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().BasicEng().(tensor.BLA[DT, T])
-		_, bok = b.Engine().Workhorse().BasicEng().(tensor.BLA[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.BLA[DT, T])
+		_, bok = b.Engine().Workhorse().(tensor.BLA[DT, T])
 		if !aok && !bok {
 			return
 		}
@@ -383,8 +383,8 @@ func Add[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgon
 	_, bok := b.Engine().Workhorse().(tensor.Adder[DT, T])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().BasicEng().(tensor.Adder[DT, T])
-		_, bok = b.Engine().Workhorse().BasicEng().(tensor.Adder[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.Adder[DT, T])
+		_, bok = b.Engine().Workhorse().(tensor.Adder[DT, T])
 		if !aok && !bok {
 			log.Printf("Not AOK and not BOK")
 			return
