@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // powOp is the base op for elementwise exponentiation.
-type powOp[DT any, T values.Value[DT]] struct{ binop }
+type powOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op powOp[DT, T]) String() string { return "^" }
+func (op powOp[DT]) String() string { return "^" }
 
-func (op powOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op powOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op powOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	arither, ok := e.(tensor.Arither[DT, T])
+	arither, ok := e.(tensor.Arither[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, arither, errors.ThisFn())
 	}
@@ -52,41 +50,40 @@ func (op powOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise exponentiation.
-func (op powOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op powOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise exponentiation but with a preallocated return value.
 // PreallocDo allows pow to implement ops.PreallocOp.
-func (op powOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op powOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // powVV is a tensor-tensor elementwise exponentiation.
-type powVV[DT any, T values.Value[DT]] struct {
-	powOp[DT, T]
+type powVV[DT any] struct {
+	powOp[DT]
 	binopVV
 }
 
 // powVS is a tensor-scalar elementwise exponentiation.
-type powVS[DT any, T values.Value[DT]] struct {
-	powOp[DT, T]
+type powVS[DT any] struct {
+	powOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op powVS[DT, T]) String() string { return "^·" }
+func (op powVS[DT]) String() string { return "^·" }
 
 // powSV is a scalar-tensor elementwise exponentiation.
-type powSV[DT any, T values.Value[DT]] struct {
-	powOp[DT, T]
+type powSV[DT any] struct {
+	powOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op powSV[DT, T]) String() string { return "·^" }
+func (op powSV[DT]) String() string { return "·^" }

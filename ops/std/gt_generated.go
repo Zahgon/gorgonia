@@ -11,22 +11,21 @@ import (
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
 	"gorgonia.org/gorgonia/types"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // gtOp is the base op for elementwise greater-than.
-type gtOp[DT any, T values.Value[DT], U values.Value[bool]] struct{ binop }
+type gtOp[DT any] struct{ binop }
 
-type gtOpRS[DT any, T values.Value[DT]] struct{ binop }
-
-// String implements fmt.Stringer.
-func (op gtOp[DT, T, U]) String() string { return ">" }
+type gtOpRS[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op gtOpRS[DT, T]) String() string { return ">" }
+func (op gtOp[DT]) String() string { return ">" }
 
-func (op gtOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, err error) {
+// String implements fmt.Stringer.
+func (op gtOpRS[DT]) String() string { return ">" }
+
+func (op gtOp[DT]) do(ctx context.Context, a, b tensor.Basic[DT], prealloc tensor.Basic[bool]) (retVal tensor.Basic[bool], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -41,9 +40,9 @@ func (op gtOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, 
 	}
 
 	asSame := fo.AsType == a.Dtype()
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
-	fullord, ok := e.(tensor.FullOrd[DT, tensor.Basic[DT]])
+	fullord, ok := e.(tensor.FullOrd[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, fullord, errors.ThisFn())
 	}
@@ -59,11 +58,10 @@ func (op gtOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, 
 		}
 		err = fullord.Gt(ctx2, a, b, ret, asSame)
 	}
-	retVal = ret.(U)
 	return retVal, err
 }
 
-func (op gtOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op gtOpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -79,7 +77,7 @@ func (op gtOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err
 
 	toBroadcast := fo.Broadcast
 
-	fullord, ok := e.(tensor.FullOrd[DT, tensor.Basic[DT]])
+	fullord, ok := e.(tensor.FullOrd[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, fullord, errors.ThisFn())
 	}
@@ -95,90 +93,87 @@ func (op gtOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err
 		}
 		err = fullord.Gt(ctx2, a, b, ret, true)
 	}
-	retVal = ret.(T)
 	return retVal, err
 }
 
 // Do performs elementwise greater-than.
-func (op gtOp[DT, T, U]) Do(ctx context.Context, vs ...T) (retVal U, err error) {
+func (op gtOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc U
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // Do performs elementwise greater-than.
-func (op gtOpRS[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op gtOpRS[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
+	return op.do(ctx, a, b, nil)
+}
+
+// PreallocDo performs elementwise greater-than but with a preallocated return value.
+// PreallocDo allows gt to implement ops.PreallocOp.
+func (op gtOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[bool], vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
+	a := vs[0]
+	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // PreallocDo performs elementwise greater-than but with a preallocated return value.
 // PreallocDo allows gt to implement ops.PreallocOp.
-func (op gtOp[DT, T, U]) PreallocDo(ctx context.Context, prealloc U, vs ...T) (retVal U, err error) {
+func (op gtOpRS[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
-}
-
-// PreallocDo performs elementwise greater-than but with a preallocated return value.
-// PreallocDo allows gt to implement ops.PreallocOp.
-func (op gtOpRS[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
-	a := vs[0]
-	b := vs[1]
-	return op.do(ctx, a, b, prealloc)
-}                                                   // DiffWRT returns {false, false} for gt
-func (op gtOp[DT, T, U]) DiffWRT(inputs int) []bool { return twofalses }
+}                                             // DiffWRT returns {false, false} for gt
+func (op gtOp[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // DiffWRT returns {false, false} for gt
-func (op gtOpRS[DT, T]) DiffWRT(inputs int) []bool { return twofalses }
+func (op gtOpRS[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // gtVV is a tensor-tensor elementwise greater-than.
-type gtVV[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	gtOp[DT, T, U]
+type gtVV[DT any] struct {
+	gtOp[DT]
 	binopVV
 }
 
-type gtVVRS[DT any, T values.Value[DT]] struct {
-	gtOpRS[DT, T]
+type gtVVRS[DT any] struct {
+	gtOpRS[DT]
 	binopVV
 }
 
 // Type returns the type: (·) (·) :  a → a → b
-func (op gtVV[DT, T, U]) Type() hm.Type {
+func (op gtVV[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // (T a) or a
 	b := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
 	return types.NewFunc(a, a, b)
 }
 
 // Type returns the type: (·) :  a → a → a
-func (op gtVVRS[DT, T]) Type() hm.Type {
+func (op gtVVRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a) or a
 	return types.NewFunc(a, a, a)
 }
 
 // gtVS is a tensor-scalar elementwise greater-than.
-type gtVS[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	gtOp[DT, T, U]
+type gtVS[DT any] struct {
+	gtOp[DT]
 	binopVS
 }
 
 // gtVSRS is a tensor-scalar elementwise greater-than.
-type gtVSRS[DT any, T values.Value[DT]] struct {
-	gtOpRS[DT, T]
+type gtVSRS[DT any] struct {
+	gtOpRS[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op gtVS[DT, T, U]) String() string { return ">·" }
+func (op gtVS[DT]) String() string { return ">·" }
 
 // String implements fmt.Stringer.
-func (op gtVSRS[DT, T]) String() string { return ">·" }
+func (op gtVSRS[DT]) String() string { return ">·" }
 
 // Type returns the type: (·) :  a → b → c
-func (op gtVS[DT, T, U]) Type() hm.Type {
+func (op gtVS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // (T a)
 	b := hm.TypeVariable('b')               // a
 	c := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
@@ -186,32 +181,32 @@ func (op gtVS[DT, T, U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → a
-func (op gtVSRS[DT, T]) Type() hm.Type {
+func (op gtVSRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a) or a
 	b := hm.TypeVariable('b') // b
 	return types.NewFunc(a, b, a)
 }
 
 // gtSV is a scalar-tensor elementwise greater-than.
-type gtSV[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	gtOp[DT, T, U]
+type gtSV[DT any] struct {
+	gtOp[DT]
 	binopSV
 }
 
 // gtSV is a scalar-tensor elementwise greater-than.
-type gtSVRS[DT any, T values.Value[DT]] struct {
-	gtOpRS[DT, T]
+type gtSVRS[DT any] struct {
+	gtOpRS[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op gtSV[DT, T, U]) String() string { return "·>" }
+func (op gtSV[DT]) String() string { return "·>" }
 
 // String implements fmt.Stringer.
-func (op gtSVRS[DT, T]) String() string { return "·>" }
+func (op gtSVRS[DT]) String() string { return "·>" }
 
 // Type returns the type: (·) :  a → b → c
-func (op gtSV[DT, T, U]) Type() hm.Type {
+func (op gtSV[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // U
 	b := hm.TypeVariable('b')               // (T U) or U
 	c := types.MakeDependent(b, dtype.Bool) // (T Bool) or Bool
@@ -219,7 +214,7 @@ func (op gtSV[DT, T, U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → b
-func (op gtSVRS[DT, T]) Type() hm.Type {
+func (op gtSVRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // a
 	b := hm.TypeVariable('b') // (T b) or b
 	return types.NewFunc(a, b, b)

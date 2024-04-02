@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // divOp is the base op for elementwise division.
-type divOp[DT any, T values.Value[DT]] struct{ binop }
+type divOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op divOp[DT, T]) String() string { return "÷" }
+func (op divOp[DT]) String() string { return "÷" }
 
-func (op divOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op divOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op divOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	basicarither, ok := e.(tensor.BasicArither[DT, T])
+	basicarither, ok := e.(tensor.BasicArither[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, basicarither, errors.ThisFn())
 	}
@@ -52,41 +50,40 @@ func (op divOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise division.
-func (op divOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op divOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise division but with a preallocated return value.
 // PreallocDo allows div to implement ops.PreallocOp.
-func (op divOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op divOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // divVV is a tensor-tensor elementwise division.
-type divVV[DT any, T values.Value[DT]] struct {
-	divOp[DT, T]
+type divVV[DT any] struct {
+	divOp[DT]
 	binopVV
 }
 
 // divVS is a tensor-scalar elementwise division.
-type divVS[DT any, T values.Value[DT]] struct {
-	divOp[DT, T]
+type divVS[DT any] struct {
+	divOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op divVS[DT, T]) String() string { return "÷·" }
+func (op divVS[DT]) String() string { return "÷·" }
 
 // divSV is a scalar-tensor elementwise division.
-type divSV[DT any, T values.Value[DT]] struct {
-	divOp[DT, T]
+type divSV[DT any] struct {
+	divOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op divSV[DT, T]) String() string { return "·÷" }
+func (op divSV[DT]) String() string { return "·÷" }

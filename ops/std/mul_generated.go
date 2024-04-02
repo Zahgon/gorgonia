@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // mulOp is the base op for elementwise multiplciatio=.
-type mulOp[DT any, T values.Value[DT]] struct{ binop }
+type mulOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op mulOp[DT, T]) String() string { return "*" }
+func (op mulOp[DT]) String() string { return "*" }
 
-func (op mulOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op mulOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op mulOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	basicarither, ok := e.(tensor.BasicArither[DT, T])
+	basicarither, ok := e.(tensor.BasicArither[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, basicarither, errors.ThisFn())
 	}
@@ -52,41 +50,40 @@ func (op mulOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise multiplciatio=.
-func (op mulOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op mulOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise multiplciatio= but with a preallocated return value.
 // PreallocDo allows mul to implement ops.PreallocOp.
-func (op mulOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op mulOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // mulVV is a tensor-tensor elementwise multiplciatio=.
-type mulVV[DT any, T values.Value[DT]] struct {
-	mulOp[DT, T]
+type mulVV[DT any] struct {
+	mulOp[DT]
 	binopVV
 }
 
 // mulVS is a tensor-scalar elementwise multiplciatio=.
-type mulVS[DT any, T values.Value[DT]] struct {
-	mulOp[DT, T]
+type mulVS[DT any] struct {
+	mulOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op mulVS[DT, T]) String() string { return "*·" }
+func (op mulVS[DT]) String() string { return "*·" }
 
 // mulSV is a scalar-tensor elementwise multiplciatio=.
-type mulSV[DT any, T values.Value[DT]] struct {
-	mulOp[DT, T]
+type mulSV[DT any] struct {
+	mulOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op mulSV[DT, T]) String() string { return "·*" }
+func (op mulSV[DT]) String() string { return "·*" }

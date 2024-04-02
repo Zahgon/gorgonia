@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // ceil is a elementwise ceil.
-type ceilOp[DT any, T values.Value[DT]] struct{ unop }
+type ceilOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op ceilOp[DT, T]) String() string { return "⌈·⌉" }
+func (op ceilOp[DT]) String() string { return "⌈·⌉" }
 
 // Do performs elementwise ceil.
-func (op ceilOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op ceilOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op ceilOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var intrepr IntRepr[DT, T]
+	var intrepr IntRepr[DT]
 	var ok bool
-	if intrepr, ok = e.(IntRepr[DT, T]); !ok {
+	if intrepr, ok = e.(IntRepr[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, intrepr, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = intrepr.Ceil(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op ceilOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise ceil but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op ceilOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op ceilOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op ceilOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var intrepr IntRepr[DT, T]
+	var intrepr IntRepr[DT]
 	var ok bool
-	if intrepr, ok = e.(IntRepr[DT, T]); !ok {
+	if intrepr, ok = e.(IntRepr[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, intrepr, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape

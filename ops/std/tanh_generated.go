@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // tanh is a elementwise tanh.
-type tanhOp[DT any, T values.Value[DT]] struct{ unop }
+type tanhOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op tanhOp[DT, T]) String() string { return "tanh" }
+func (op tanhOp[DT]) String() string { return "tanh" }
 
 // Do performs elementwise tanh.
-func (op tanhOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op tanhOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op tanhOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var tanher Tanher[DT, T]
+	var tanher Tanher[DT]
 	var ok bool
-	if tanher, ok = e.(Tanher[DT, T]); !ok {
+	if tanher, ok = e.(Tanher[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, tanher, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = tanher.Tanh(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op tanhOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise tanh but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op tanhOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op tanhOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op tanhOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var tanher Tanher[DT, T]
+	var tanher Tanher[DT]
 	var ok bool
-	if tanher, ok = e.(Tanher[DT, T]); !ok {
+	if tanher, ok = e.(Tanher[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, tanher, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape
@@ -67,4 +66,4 @@ func (op tanhOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 }
 
 // DiffWRT returns {true} for tanh
-func (op tanhOp[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op tanhOp[DT]) DiffWRT(inputs int) []bool { return onetrue }

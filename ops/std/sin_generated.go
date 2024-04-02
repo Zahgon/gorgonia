@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // sin is a elementwise sine.
-type sinOp[DT any, T values.Value[DT]] struct{ unop }
+type sinOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op sinOp[DT, T]) String() string { return "Sin" }
+func (op sinOp[DT]) String() string { return "Sin" }
 
 // Do performs elementwise sine.
-func (op sinOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op sinOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op sinOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var trig Trig[DT, T]
+	var trig Trig[DT]
 	var ok bool
-	if trig, ok = e.(Trig[DT, T]); !ok {
+	if trig, ok = e.(Trig[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, trig, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = trig.Sin(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op sinOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise sine but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op sinOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op sinOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op sinOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (ret
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var trig Trig[DT, T]
+	var trig Trig[DT]
 	var ok bool
-	if trig, ok = e.(Trig[DT, T]); !ok {
+	if trig, ok = e.(Trig[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, trig, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape
@@ -67,4 +66,4 @@ func (op sinOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (ret
 }
 
 // DiffWRT returns {true} for sin
-func (op sinOp[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op sinOp[DT]) DiffWRT(inputs int) []bool { return onetrue }

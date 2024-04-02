@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // addOp is the base op for elementwise addition.
-type addOp[DT any, T values.Value[DT]] struct{ binop }
+type addOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op addOp[DT, T]) String() string { return "+" }
+func (op addOp[DT]) String() string { return "+" }
 
-func (op addOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op addOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op addOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	adder, ok := e.(tensor.Adder[DT, T])
+	adder, ok := e.(tensor.Adder[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, adder, errors.ThisFn())
 	}
@@ -52,41 +50,40 @@ func (op addOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise addition.
-func (op addOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op addOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise addition but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op addOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op addOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // addVV is a tensor-tensor elementwise addition.
-type addVV[DT any, T values.Value[DT]] struct {
-	addOp[DT, T]
+type addVV[DT any] struct {
+	addOp[DT]
 	binopVV
 }
 
 // addVS is a tensor-scalar elementwise addition.
-type addVS[DT any, T values.Value[DT]] struct {
-	addOp[DT, T]
+type addVS[DT any] struct {
+	addOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op addVS[DT, T]) String() string { return "+·" }
+func (op addVS[DT]) String() string { return "+·" }
 
 // addSV is a scalar-tensor elementwise addition.
-type addSV[DT any, T values.Value[DT]] struct {
-	addOp[DT, T]
+type addSV[DT any] struct {
+	addOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op addSV[DT, T]) String() string { return "·+" }
+func (op addSV[DT]) String() string { return "·+" }

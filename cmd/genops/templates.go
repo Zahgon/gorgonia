@@ -6,12 +6,12 @@ import (
 
 const arithMetaRaw = `
 {{define "TypeDefRaw"}}
-type {{.Name }}Op[DT any, T values.Value[DT]] struct{ binop }
+type {{.Name }}Op[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op {{.Name}}Op[DT,T]) String() string { return "{{.Symbol}}" }
+func (op {{.Name}}Op[DT]) String() string { return "{{.Symbol}}" }
 
-func (op {{.Name}}Op[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op {{.Name}}Op[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -19,15 +19,14 @@ func (op {{.Name}}Op[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal T,
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil{
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT, T]);
+	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT]);
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, {{.InterfaceName | lower}}, errors.ThisFn())
 	}
@@ -45,40 +44,39 @@ func (op {{.Name}}Op[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal T,
 }
 
 // Do performs {{.CommentOp}}.
-func (op {{.Name}}Op[DT,T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op {{.Name}}Op[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	{{- template "Do" . -}}
 }
 
 // PreallocDo performs {{.CommentOp}} but with a preallocated return value.
 // PreallocDo allows {{.Name}} to implement ops.PreallocOp.
-func (op {{.Name}}Op[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op {{.Name}}Op[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	{{- template "PreallocDo" . -}}
 }
 
 
 {{- if not .IsDiff -}}
 // DiffWRT returns {false, false} for {{.Name}}
-func (op {{.Name}}Op[DT,T]) DiffWRT(inputs int) []bool { return twofalses }
+func (op {{.Name}}Op[DT]) DiffWRT(inputs int) []bool { return twofalses }
 {{- end -}}
 {{end}}
 
 {{define "TypeDefVV"}}
-type {{.Name}}VV[DT any, T values.Value[DT]] struct { {{.Name }}Op[DT,T] ; binopVV }
+type {{.Name}}VV[DT any] struct { {{.Name }}Op[DT] ; binopVV }
 {{end}}
 
 {{define "TypeDefVS"}}
-type {{.Name}}VS[DT any, T values.Value[DT]] struct { {{.Name}}Op[DT,T] ; binopVS }
+type {{.Name}}VS[DT any] struct { {{.Name}}Op[DT] ; binopVS }
 {{end}}
 
 {{define "TypeDefSV"}}
-type {{.Name}}SV[DT any, T values.Value[DT]] struct { {{.Name}}Op[DT,T] ; binopSV }
+type {{.Name}}SV[DT any] struct { {{.Name}}Op[DT] ; binopSV }
 {{end}}
 
 {{- define "Do" -}}
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a,b, prealloc)
+	return op.do(ctx, a,b, nil)
 {{- end -}}
 {{- define "PreallocDo" -}}
 	a := vs[0]
@@ -95,17 +93,17 @@ type {{.Name}}SV[DT any, T values.Value[DT]] struct { {{.Name}}Op[DT,T] ; binopS
 const cmpMetaRaw = `
 
 {{define "TypeDefRaw"}}
-type {{.Name}}Op[DT any, T values.Value[DT], U values.Value[bool]] struct{ binop }
+type {{.Name}}Op[DT any] struct{ binop }
 
-type {{.Name}}OpRS[DT any, T values.Value[DT]] struct{ binop }
-
-// String implements fmt.Stringer.
-func (op {{.Name}}Op[DT,T,U]) String() string { return "{{.Symbol}}" }
+type {{.Name}}OpRS[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op {{.Name}}OpRS[DT,T]) String() string {return "{{.Symbol}}" }
+func (op {{.Name}}Op[DT]) String() string { return "{{.Symbol}}" }
 
-func (op {{.Name}}Op[DT,T,U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, err error) {
+// String implements fmt.Stringer.
+func (op {{.Name}}OpRS[DT]) String() string {return "{{.Symbol}}" }
+
+func (op {{.Name}}Op[DT]) do(ctx context.Context, a, b tensor.Basic[DT], prealloc tensor.Basic[bool]) (retVal tensor.Basic[bool], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -120,9 +118,9 @@ func (op {{.Name}}Op[DT,T,U]) do(ctx context.Context, a, b T, prealloc U) (retVa
 	}
 
 	asSame := fo.AsType == a.Dtype()
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
-	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT, tensor.Basic[DT]]);
+	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT]);
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, {{.InterfaceName | lower}}, errors.ThisFn())
 	}
@@ -138,11 +136,10 @@ func (op {{.Name}}Op[DT,T,U]) do(ctx context.Context, a, b T, prealloc U) (retVa
 		}
 		err = {{.InterfaceName|lower}}.{{.Method}}(ctx2, a, b, ret, asSame)
 	}
-	retVal = ret.(U)
 	return retVal, err
 }
 
-func (op {{.Name}}OpRS[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op {{.Name}}OpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -158,7 +155,7 @@ func (op {{.Name}}OpRS[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal 
 
 	toBroadcast := fo.Broadcast
 
-	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT, tensor.Basic[DT]]);
+	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT]);
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, {{.InterfaceName | lower}}, errors.ThisFn())
 	}
@@ -174,30 +171,27 @@ func (op {{.Name}}OpRS[DT,T]) do(ctx context.Context, a, b, prealloc T) (retVal 
 		}
 		err = {{.InterfaceName|lower}}.{{.Method}}(ctx2, a, b, ret, true)
 	}
-	retVal = ret.(T)
 	return retVal, err
 }
 
 // Do performs {{.CommentOp}}.
-func (op {{.Name}}Op[DT,T,U]) Do(ctx context.Context, vs ...T) (retVal U, err error) {
+func (op {{.Name}}Op[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc U
-	return op.do(ctx,a,b, prealloc)
+	return op.do(ctx,a,b, nil)
 }
 
 // Do performs {{.CommentOp}}.
-func (op {{.Name}}OpRS[DT,T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op {{.Name}}OpRS[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx,a,b, prealloc)
+	return op.do(ctx,a,b, nil)
 }
 
 
 // PreallocDo performs {{.CommentOp}} but with a preallocated return value.
 // PreallocDo allows {{.Name}} to implement ops.PreallocOp.
-func (op {{.Name}}Op[DT,T,U]) PreallocDo(ctx context.Context, prealloc U, vs ...T) (retVal U, err error) {
+func (op {{.Name}}Op[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[bool], vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a,b, prealloc)
@@ -205,7 +199,7 @@ func (op {{.Name}}Op[DT,T,U]) PreallocDo(ctx context.Context, prealloc U, vs ...
 
 // PreallocDo performs {{.CommentOp}} but with a preallocated return value.
 // PreallocDo allows {{.Name}} to implement ops.PreallocOp.
-func (op {{.Name}}OpRS[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op {{.Name}}OpRS[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a,b, prealloc)
@@ -213,52 +207,52 @@ func (op {{.Name}}OpRS[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...
 
 {{- if not .IsDiff -}}
 // DiffWRT returns {false, false} for {{.Name}}
-func (op {{.Name}}Op[DT,T,U]) DiffWRT(inputs int) []bool { return twofalses }
+func (op {{.Name}}Op[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // DiffWRT returns {false, false} for {{.Name}}
-func (op {{.Name}}OpRS[DT,T]) DiffWRT(inputs int) []bool { return twofalses }
+func (op {{.Name}}OpRS[DT]) DiffWRT(inputs int) []bool { return twofalses }
 {{- end -}}
 {{end}}
 
 
 {{define "TypeDefVV"}}
-type {{.Name}}VV[DT any, T values.Value[DT], U values.Value[bool]] struct { {{.Name}}Op[DT,T, U]; binopVV  }
+type {{.Name}}VV[DT any] struct { {{.Name}}Op[DT]; binopVV  }
 
-type {{.Name}}VVRS[DT any, T values.Value[DT]] struct { {{.Name}}OpRS[DT,T]; binopVV  }
+type {{.Name}}VVRS[DT any] struct { {{.Name}}OpRS[DT]; binopVV  }
 {{end}}
 
 {{define "TypeDefVS"}}
-type {{.Name}}VS[DT any, T values.Value[DT], U values.Value[bool]] struct { {{.Name}}Op[DT,T,U]; binopVS }
+type {{.Name}}VS[DT any] struct { {{.Name}}Op[DT]; binopVS }
 
 // {{.Name}}VSRS is a tensor-scalar {{.CommentOp}}.
-type {{.Name}}VSRS[DT any, T values.Value[DT]] struct { {{.Name}}OpRS[DT,T]; binopVS  }
+type {{.Name}}VSRS[DT any] struct { {{.Name}}OpRS[DT]; binopVS  }
 {{end}}
 
 {{define "TypeDefSV"}}
-type {{.Name}}SV[DT any, T values.Value[DT], U values.Value[bool]] struct { {{.Name}}Op[DT,T,U]; binopSV }
+type {{.Name}}SV[DT any] struct { {{.Name}}Op[DT]; binopSV }
 
 // {{.Name}}SV is a scalar-tensor {{.CommentOp}}.
-type {{.Name}}SVRS[DT any, T values.Value[DT]] struct { {{.Name}}OpRS[DT,T]; binopSV }
+type {{.Name}}SVRS[DT any] struct { {{.Name}}OpRS[DT]; binopSV }
 {{end}}
 
 
 {{define "Type()VV"}}
 // Type returns the type: (·) (·) :  a → a → b
-func (op {{.Name}}VV[DT,T,U]) Type() hm.Type{
+func (op {{.Name}}VV[DT]) Type() hm.Type{
 	a := hm.TypeVariable('a') // (T a) or a
 	b := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
 	return types.NewFunc(a,a,b)
 }
 
 // Type returns the type: (·) :  a → a → a
-func (op {{.Name}}VVRS[DT,T]) Type() hm.Type{
+func (op {{.Name}}VVRS[DT]) Type() hm.Type{
 	a := hm.TypeVariable('a') // (T a) or a
 	return types.NewFunc(a,a,a)
 }
 {{end}}
 {{define "Type()VS"}}
 // Type returns the type: (·) :  a → b → c
-func (op {{.Name}}VS[DT,T,U]) Type() hm.Type {
+func (op {{.Name}}VS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a)
 	b := hm.TypeVariable('b') // a
 	c := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
@@ -266,7 +260,7 @@ func (op {{.Name}}VS[DT,T,U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → a
-func (op {{.Name}}VSRS[DT,T]) Type() hm.Type {
+func (op {{.Name}}VSRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a) or a
 	b := hm.TypeVariable('b') // b
 	return types.NewFunc(a,b,a)
@@ -274,7 +268,7 @@ func (op {{.Name}}VSRS[DT,T]) Type() hm.Type {
 {{end}}
 {{define "Type()SV"}}
 // Type returns the type: (·) :  a → b → c
-func (op {{.Name}}SV[DT,T,U]) Type() hm.Type {
+func (op {{.Name}}SV[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // U
 	b := hm.TypeVariable('b') // (T U) or U
 	c := types.MakeDependent(b, dtype.Bool) // (T Bool) or Bool
@@ -282,7 +276,7 @@ func (op {{.Name}}SV[DT,T,U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → b
-func (op {{.Name}}SVRS[DT,T]) Type() hm.Type {
+func (op {{.Name}}SVRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // a
 	b := hm.TypeVariable('b') // (T b) or b
 	return types.NewFunc(a,b,b)
@@ -304,7 +298,7 @@ const binOpRaw = `// {{.Name}}Op is the base op for {{.CommentOp}}.
 {{- template "TypeDefVS" . -}}
 
 // String implements fmt.Stringer.
-func (op {{.Name}}VS[DT,T]) String() string { return "{{.Symbol}}·" }
+func (op {{.Name}}VS[DT]) String() string { return "{{.Symbol}}·" }
 
 {{ template "Type()VS" . }}
 
@@ -313,7 +307,7 @@ func (op {{.Name}}VS[DT,T]) String() string { return "{{.Symbol}}·" }
 {{- template "TypeDefSV" . -}}
 
 // String implements fmt.Stringer.
-func (op {{.Name}}SV[DT,T]) String() string { return "·{{.Symbol}}" }
+func (op {{.Name}}SV[DT]) String() string { return "·{{.Symbol}}" }
 
 {{ template "Type()SV" . }}
 
@@ -333,10 +327,10 @@ const cmpBinOpRaw = `// {{.Name}}Op is the base op for {{.CommentOp}}.
 {{- template "TypeDefVS" . -}}
 
 // String implements fmt.Stringer.
-func (op {{.Name}}VS[DT,T, U]) String() string { return "{{.Symbol}}·" }
+func (op {{.Name}}VS[DT]) String() string { return "{{.Symbol}}·" }
 
 // String implements fmt.Stringer.
-func (op {{.Name}}VSRS[DT,T]) String() string { return "{{.Symbol}}·" }
+func (op {{.Name}}VSRS[DT]) String() string { return "{{.Symbol}}·" }
 
 {{ template "Type()VS" . }}
 
@@ -345,10 +339,10 @@ func (op {{.Name}}VSRS[DT,T]) String() string { return "{{.Symbol}}·" }
 {{- template "TypeDefSV" . -}}
 
 // String implements fmt.Stringer.
-func (op {{.Name}}SV[DT,T,U]) String() string { return "·{{.Symbol}}" }
+func (op {{.Name}}SV[DT]) String() string { return "·{{.Symbol}}" }
 
 // String implements fmt.Stringer.
-func (op {{.Name}}SVRS[DT,T]) String() string { return "·{{.Symbol}}" }
+func (op {{.Name}}SVRS[DT]) String() string { return "·{{.Symbol}}" }
 
 {{ template "Type()SV" . }}
 
@@ -356,7 +350,7 @@ func (op {{.Name}}SVRS[DT,T]) String() string { return "·{{.Symbol}}" }
 
 const binSymDiffRaw = `{{ if .IsDiff }}
 // SymDiff performs the symbolic differentiation of {{.Name}}.
-func (op {{.Name}}Op[DT,T])SymDiff(g *exprgraph.Graph, inputs []*exprgraph.Node, output *exprgraph.Node, grad *exprgraph.Node) (retVal []*exprgraph.Node, err error){ panic("not implemented" )}
+func (op {{.Name}}Op[DT])SymDiff(g *exprgraph.Graph, inputs []*exprgraph.Node, output *exprgraph.Node, grad *exprgraph.Node) (retVal []*exprgraph.Node, err error){ panic("not implemented" )}
 {{ end }}
 
 `
@@ -536,13 +530,13 @@ func Test_{{$SV}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
 `
 
 const unopTmplRaw = `// {{.Name}} is a {{.CommentOp}}.
-type {{.Name}}Op[DT any, T values.Value[DT]] struct{unop}
+type {{.Name}}Op[DT any] struct{unop}
 
 // String implements fmt.Stringer.
-func (op {{.Name}}Op[DT,T]) String() string {return "{{.Symbol}}" }
+func (op {{.Name}}Op[DT]) String() string {return "{{.Symbol}}" }
 
 // Do performs {{.CommentOp}}.
-func (op {{.Name}}Op[DT,T]) Do(ctx context.Context, vs ...T)(retVal T, err error){
+func (op {{.Name}}Op[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT])(retVal tensor.Basic[DT], err error){
 if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -550,12 +544,12 @@ if err := internal.HandleCtx(ctx); err != nil {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var {{.InterfaceName | lower}} {{.InterfaceName}}[DT,T]
+	var {{.InterfaceName | lower}} {{.InterfaceName}}[DT]
 	var ok bool
-	if {{.InterfaceName | lower}}, ok = e.({{.InterfaceName}}[DT,T]); !ok{
+	if {{.InterfaceName | lower}}, ok = e.({{.InterfaceName}}[DT]); !ok{
 		return retVal, errors.Errorf(errors.EngineSupport, e, {{.InterfaceName | lower}}, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT,T] (e, a, a.Shape()); err !=nil{
+	if retVal, _, err = handleFuncOpts[DT] (e, a, a.Shape()); err !=nil{
 		return retVal, errors.Wrapf(err , errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = {{.InterfaceName | lower}}.{{.Method}}(ctx2, a, retVal); err !=nil{
@@ -568,7 +562,7 @@ if err := internal.HandleCtx(ctx); err != nil {
 
 // PreallocDo performs {{.CommentOp}} but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op {{.Name}}Op[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op {{.Name}}Op[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -576,9 +570,9 @@ func (op {{.Name}}Op[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...T)
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var {{.InterfaceName | lower}} {{.InterfaceName}}[DT,T]
+	var {{.InterfaceName | lower}} {{.InterfaceName}}[DT]
 	var ok bool
-	if {{.InterfaceName | lower}}, ok = e.({{.InterfaceName}}[DT,T]); !ok{
+	if {{.InterfaceName | lower}}, ok = e.({{.InterfaceName}}[DT]); !ok{
 		return retVal, errors.Errorf(errors.EngineSupport, e, {{.InterfaceName | lower}}, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape
@@ -592,7 +586,7 @@ func (op {{.Name}}Op[DT,T]) PreallocDo(ctx context.Context, prealloc T, vs ...T)
 
 {{ if  .IsDiff }}
 // DiffWRT returns {true} for {{.Name}}
-func (op {{.Name}}Op[DT,T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op {{.Name}}Op[DT]) DiffWRT(inputs int) []bool { return onetrue }
 {{- end -}}
 
 `
@@ -647,29 +641,29 @@ const binopAPIRaw = `
 {{- $cmpTypeParam := "" -}}
 {{- $retType := "" -}}
 {{- if .IsCmp -}}
-{{- $vvrs = (printf "%vVVRS[DT,T]{}" .Name ) -}}
-{{- $vsrs = (printf "%vVSRS[DT,T]{}" .Name ) -}}
-{{- $svrs = (printf "%vSVRS[DT,T]{}" .Name ) -}}
-{{- $vv = (printf "%vVV[DT,T, *dense.Dense[bool]]{}" .Name ) -}}
-{{- $vs = (printf "%vVS[DT,T, *dense.Dense[bool]]{}" .Name ) -}}
-{{- $sv = (printf "%vSV[DT,T, *dense.Dense[bool]]{}" .Name ) -}}
-{{- $cmpTypeParam = ", U values.V"}}
+{{- $vvrs = (printf "%vVVRS[DT]{}" .Name ) -}}
+{{- $vsrs = (printf "%vVSRS[DT]{}" .Name ) -}}
+{{- $svrs = (printf "%vSVRS[DT]{}" .Name ) -}}
+{{- $vv = (printf "%vVV[DT]{}" .Name ) -}}
+{{- $vs = (printf "%vVS[DT]{}" .Name ) -}}
+{{- $sv = (printf "%vSV[DT]{}" .Name ) -}}
+{{- $cmpTypeParam = ", DT2 any"}}
 {{- $retType = "ops.Desc"}}
 {{- else -}}
-{{- $vv = (printf "%vVV[DT, T]{}" .Name ) -}}
-{{- $vs = (printf "%vVS[DT,T]{}" .Name ) -}}
-{{- $sv = (printf "%vSV[DT,T]{}" .Name ) -}}
-{{- $retType = "ops.PreallocOp[DT,T]" -}}
+{{- $vv = (printf "%vVV[DT]{}" .Name ) -}}
+{{- $vs = (printf "%vVS[DT]{}" .Name ) -}}
+{{- $sv = (printf "%vSV[DT]{}" .Name ) -}}
+{{- $retType = "ops.PreallocOp[DT]" -}}
 {{- end -}}
 
 // {{.Name | title}} creates an ops.Op that is correct to the shape of the given operands.
-func {{.Name | title}}[DT any, T values.Value[DT]{{$cmpTypeParam}}](a, b ops.Operand) {{$retType}} {
+func {{.Name | title}}[DT any {{$cmpTypeParam}}](a, b ops.Operand) {{$retType}} {
 	aScalar := a.Shape().IsScalar()
 	bScalar := b.Shape().IsScalar()
 
 	{{ if .IsCmp -}}
-	var z1 T
-	var z2 U
+	var z1 DT
+	var z2 DT2
 	retSame := any(z1) == any(z2)
 	if retSame {
 		switch {
@@ -781,17 +775,17 @@ func Test{{.Name | title}}(t *testing.T){
 `
 
 const unopAPITmplRaw = `// {{.Name | title}} creates an ops.Op that performs the named operation.
-func {{.Name | title}}[DT any, T values.Value[DT]]() ops.PreallocOp[DT,T]{
-	return {{.Name}}Op[DT,T] {}
+func {{.Name | title}}[DT any]() ops.PreallocOp[DT]{
+	return {{.Name}}Op[DT] {}
 }
 `
 
 const doDiffTmplRaw = `{{ if .IsDiff }}
 // DoDiff is the method that allows automatic differentiation of` + " `{{ .Name }}` " + `g.
-func (op {{ .Name }}Op[DT,T]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) error {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT,T])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT,T])
-	cdv := exprgraph.T2B[DT](output).(*dual.Dual[DT,T])
+func (op {{ .Name }}Op[DT]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) error {
+	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT])
+	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT])
+	cdv := exprgraph.T2B[DT](output).(*dual.Dual[DT])
 
 	advd := adv.Deriv()
 	bdvd := bdv.Deriv()
@@ -803,9 +797,9 @@ func (op {{ .Name }}Op[DT,T]) DoDiff(ctx context.Context, inputs []datatypes.Ten
 `
 
 const unopInterfaceTemplRaw = `
-type {{.InterfaceName}}[DT any, T tensor.Basic[DT]] interface{
+type {{.InterfaceName}}[DT any] interface{
 	{{range .Ops -}}
-	{{.Method}}(ctx context.Context, a, retVal T) error
+	{{.Method}}(ctx context.Context, a, retVal tensor.Basic[DT]) error
 	{{end -}}
 }
 `

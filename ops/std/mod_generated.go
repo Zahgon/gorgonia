@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // modOp is the base op for elementwise mod.
-type modOp[DT any, T values.Value[DT]] struct{ binop }
+type modOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op modOp[DT, T]) String() string { return "%" }
+func (op modOp[DT]) String() string { return "%" }
 
-func (op modOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op modOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op modOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	arither, ok := e.(tensor.Arither[DT, T])
+	arither, ok := e.(tensor.Arither[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, arither, errors.ThisFn())
 	}
@@ -52,42 +50,41 @@ func (op modOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise mod.
-func (op modOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op modOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise mod but with a preallocated return value.
 // PreallocDo allows mod to implement ops.PreallocOp.
-func (op modOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op modOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
-}                                                 // DiffWRT returns {false, false} for mod
-func (op modOp[DT, T]) DiffWRT(inputs int) []bool { return twofalses }
+}                                              // DiffWRT returns {false, false} for mod
+func (op modOp[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // modVV is a tensor-tensor elementwise mod.
-type modVV[DT any, T values.Value[DT]] struct {
-	modOp[DT, T]
+type modVV[DT any] struct {
+	modOp[DT]
 	binopVV
 }
 
 // modVS is a tensor-scalar elementwise mod.
-type modVS[DT any, T values.Value[DT]] struct {
-	modOp[DT, T]
+type modVS[DT any] struct {
+	modOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op modVS[DT, T]) String() string { return "%·" }
+func (op modVS[DT]) String() string { return "%·" }
 
 // modSV is a scalar-tensor elementwise mod.
-type modSV[DT any, T values.Value[DT]] struct {
-	modOp[DT, T]
+type modSV[DT any] struct {
+	modOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op modSV[DT, T]) String() string { return "·%" }
+func (op modSV[DT]) String() string { return "·%" }

@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // abs is a elementwise absolute value.
-type absOp[DT any, T values.Value[DT]] struct{ unop }
+type absOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op absOp[DT, T]) String() string { return "|·|" }
+func (op absOp[DT]) String() string { return "|·|" }
 
 // Do performs elementwise absolute value.
-func (op absOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op absOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op absOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var abser Abser[DT, T]
+	var abser Abser[DT]
 	var ok bool
-	if abser, ok = e.(Abser[DT, T]); !ok {
+	if abser, ok = e.(Abser[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, abser, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = abser.Abs(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op absOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise absolute value but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op absOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op absOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op absOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (ret
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var abser Abser[DT, T]
+	var abser Abser[DT]
 	var ok bool
-	if abser, ok = e.(Abser[DT, T]); !ok {
+	if abser, ok = e.(Abser[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, abser, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape

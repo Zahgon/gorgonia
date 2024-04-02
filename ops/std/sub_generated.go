@@ -8,17 +8,16 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // subOp is the base op for elementwise subtraction.
-type subOp[DT any, T values.Value[DT]] struct{ binop }
+type subOp[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op subOp[DT, T]) String() string { return "-" }
+func (op subOp[DT]) String() string { return "-" }
 
-func (op subOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op subOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -26,15 +25,14 @@ func (op subOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 	ctx2, task := trace.NewTask(ctx, op.String())
 	defer task.End()
 
-	e, newAPA, newAPB, ret, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
+	e, newAPA, newAPB, retVal, fo, err := tensor.PrepBasicBinOpCis[DT](a, b, tensor.WithReuse(prealloc))
 	if err != nil {
 		return retVal, err
 	}
 	toIncr := fo.Incr
 	toBroadcast := fo.Broadcast
-	retVal = ret.(T)
 
-	basicarither, ok := e.(tensor.BasicArither[DT, T])
+	basicarither, ok := e.(tensor.BasicArither[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, basicarither, errors.ThisFn())
 	}
@@ -52,41 +50,40 @@ func (op subOp[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err 
 }
 
 // Do performs elementwise subtraction.
-func (op subOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op subOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // PreallocDo performs elementwise subtraction but with a preallocated return value.
 // PreallocDo allows sub to implement ops.PreallocOp.
-func (op subOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op subOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // subVV is a tensor-tensor elementwise subtraction.
-type subVV[DT any, T values.Value[DT]] struct {
-	subOp[DT, T]
+type subVV[DT any] struct {
+	subOp[DT]
 	binopVV
 }
 
 // subVS is a tensor-scalar elementwise subtraction.
-type subVS[DT any, T values.Value[DT]] struct {
-	subOp[DT, T]
+type subVS[DT any] struct {
+	subOp[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op subVS[DT, T]) String() string { return "-·" }
+func (op subVS[DT]) String() string { return "-·" }
 
 // subSV is a scalar-tensor elementwise subtraction.
-type subSV[DT any, T values.Value[DT]] struct {
-	subOp[DT, T]
+type subSV[DT any] struct {
+	subOp[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op subSV[DT, T]) String() string { return "·-" }
+func (op subSV[DT]) String() string { return "·-" }

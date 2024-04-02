@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // inv is a elementwise 1/x.
-type invOp[DT any, T values.Value[DT]] struct{ unop }
+type invOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op invOp[DT, T]) String() string { return "1/·" }
+func (op invOp[DT]) String() string { return "1/·" }
 
 // Do performs elementwise 1/x.
-func (op invOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op invOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op invOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var inver Inver[DT, T]
+	var inver Inver[DT]
 	var ok bool
-	if inver, ok = e.(Inver[DT, T]); !ok {
+	if inver, ok = e.(Inver[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, inver, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = inver.Inv(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op invOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise 1/x but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op invOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op invOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op invOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (ret
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var inver Inver[DT, T]
+	var inver Inver[DT]
 	var ok bool
-	if inver, ok = e.(Inver[DT, T]); !ok {
+	if inver, ok = e.(Inver[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, inver, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape
@@ -67,4 +66,4 @@ func (op invOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (ret
 }
 
 // DiffWRT returns {true} for inv
-func (op invOp[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op invOp[DT]) DiffWRT(inputs int) []bool { return onetrue }

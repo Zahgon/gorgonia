@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // sign is a elementwise sign.
-type signOp[DT any, T values.Value[DT]] struct{ unop }
+type signOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op signOp[DT, T]) String() string { return "Sign" }
+func (op signOp[DT]) String() string { return "Sign" }
 
 // Do performs elementwise sign.
-func (op signOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op signOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op signOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var signer Signer[DT, T]
+	var signer Signer[DT]
 	var ok bool
-	if signer, ok = e.(Signer[DT, T]); !ok {
+	if signer, ok = e.(Signer[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, signer, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = signer.Sign(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op signOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs elementwise sign but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op signOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op signOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op signOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var signer Signer[DT, T]
+	var signer Signer[DT]
 	var ok bool
-	if signer, ok = e.(Signer[DT, T]); !ok {
+	if signer, ok = e.(Signer[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, signer, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape

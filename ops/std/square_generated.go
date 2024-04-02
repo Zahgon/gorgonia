@@ -8,18 +8,17 @@ import (
 
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // square is a elementwise square.
-type squareOp[DT any, T values.Value[DT]] struct{ unop }
+type squareOp[DT any] struct{ unop }
 
 // String implements fmt.Stringer.
-func (op squareOp[DT, T]) String() string { return "²" }
+func (op squareOp[DT]) String() string { return "²" }
 
 // Do performs elementwise square.
-func (op squareOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op squareOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -27,12 +26,12 @@ func (op squareOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error)
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var squarer Squarer[DT, T]
+	var squarer Squarer[DT]
 	var ok bool
-	if squarer, ok = e.(Squarer[DT, T]); !ok {
+	if squarer, ok = e.(Squarer[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, squarer, errors.ThisFn())
 	}
-	if retVal, _, err = handleFuncOpts[DT, T](e, a, a.Shape()); err != nil {
+	if retVal, _, err = handleFuncOpts[DT](e, a, a.Shape()); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
 	if err = squarer.Square(ctx2, a, retVal); err != nil {
@@ -45,7 +44,7 @@ func (op squareOp[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error)
 
 // PreallocDo performs elementwise square but with a preallocated return value.
 // PreallocDo allows add to implement ops.PreallocOp.
-func (op squareOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op squareOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,9 +52,9 @@ func (op squareOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (
 	a := vs[0]
 	ctx2, task := trace.NewTask(ctx, op.String())
 	e := tensor.GetEngine(a)
-	var squarer Squarer[DT, T]
+	var squarer Squarer[DT]
 	var ok bool
-	if squarer, ok = e.(Squarer[DT, T]); !ok {
+	if squarer, ok = e.(Squarer[DT]); !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, squarer, errors.ThisFn())
 	}
 	// TODO check that prealloc has the same shape as expected reetVal shape
@@ -67,4 +66,4 @@ func (op squareOp[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (
 }
 
 // DiffWRT returns {true} for square
-func (op squareOp[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op squareOp[DT]) DiffWRT(inputs int) []bool { return onetrue }

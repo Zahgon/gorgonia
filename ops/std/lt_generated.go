@@ -11,22 +11,21 @@ import (
 	"gorgonia.org/gorgonia/internal"
 	"gorgonia.org/gorgonia/internal/errors"
 	"gorgonia.org/gorgonia/types"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
 // ltOp is the base op for elementwise less-than.
-type ltOp[DT any, T values.Value[DT], U values.Value[bool]] struct{ binop }
+type ltOp[DT any] struct{ binop }
 
-type ltOpRS[DT any, T values.Value[DT]] struct{ binop }
-
-// String implements fmt.Stringer.
-func (op ltOp[DT, T, U]) String() string { return "<" }
+type ltOpRS[DT any] struct{ binop }
 
 // String implements fmt.Stringer.
-func (op ltOpRS[DT, T]) String() string { return "<" }
+func (op ltOp[DT]) String() string { return "<" }
 
-func (op ltOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, err error) {
+// String implements fmt.Stringer.
+func (op ltOpRS[DT]) String() string { return "<" }
+
+func (op ltOp[DT]) do(ctx context.Context, a, b tensor.Basic[DT], prealloc tensor.Basic[bool]) (retVal tensor.Basic[bool], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -41,9 +40,9 @@ func (op ltOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, 
 	}
 
 	asSame := fo.AsType == a.Dtype()
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
-	ord, ok := e.(tensor.Ord[DT, tensor.Basic[DT]])
+	ord, ok := e.(tensor.Ord[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, ord, errors.ThisFn())
 	}
@@ -59,11 +58,10 @@ func (op ltOp[DT, T, U]) do(ctx context.Context, a, b T, prealloc U) (retVal U, 
 		}
 		err = ord.Lt(ctx2, a, b, ret, asSame)
 	}
-	retVal = ret.(U)
 	return retVal, err
 }
 
-func (op ltOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op ltOpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -79,7 +77,7 @@ func (op ltOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err
 
 	toBroadcast := fo.Broadcast
 
-	ord, ok := e.(tensor.Ord[DT, tensor.Basic[DT]])
+	ord, ok := e.(tensor.Ord[DT])
 	if !ok {
 		return retVal, errors.Errorf(errors.EngineSupport, e, ord, errors.ThisFn())
 	}
@@ -95,90 +93,87 @@ func (op ltOpRS[DT, T]) do(ctx context.Context, a, b, prealloc T) (retVal T, err
 		}
 		err = ord.Lt(ctx2, a, b, ret, true)
 	}
-	retVal = ret.(T)
 	return retVal, err
 }
 
 // Do performs elementwise less-than.
-func (op ltOp[DT, T, U]) Do(ctx context.Context, vs ...T) (retVal U, err error) {
+func (op ltOp[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc U
-	return op.do(ctx, a, b, prealloc)
+	return op.do(ctx, a, b, nil)
 }
 
 // Do performs elementwise less-than.
-func (op ltOpRS[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op ltOpRS[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
+	return op.do(ctx, a, b, nil)
+}
+
+// PreallocDo performs elementwise less-than but with a preallocated return value.
+// PreallocDo allows lt to implement ops.PreallocOp.
+func (op ltOp[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[bool], vs ...tensor.Basic[DT]) (retVal tensor.Basic[bool], err error) {
+	a := vs[0]
+	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // PreallocDo performs elementwise less-than but with a preallocated return value.
 // PreallocDo allows lt to implement ops.PreallocOp.
-func (op ltOp[DT, T, U]) PreallocDo(ctx context.Context, prealloc U, vs ...T) (retVal U, err error) {
+func (op ltOpRS[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
-}
-
-// PreallocDo performs elementwise less-than but with a preallocated return value.
-// PreallocDo allows lt to implement ops.PreallocOp.
-func (op ltOpRS[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
-	a := vs[0]
-	b := vs[1]
-	return op.do(ctx, a, b, prealloc)
-}                                                   // DiffWRT returns {false, false} for lt
-func (op ltOp[DT, T, U]) DiffWRT(inputs int) []bool { return twofalses }
+}                                             // DiffWRT returns {false, false} for lt
+func (op ltOp[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // DiffWRT returns {false, false} for lt
-func (op ltOpRS[DT, T]) DiffWRT(inputs int) []bool { return twofalses }
+func (op ltOpRS[DT]) DiffWRT(inputs int) []bool { return twofalses }
 
 // ltVV is a tensor-tensor elementwise less-than.
-type ltVV[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	ltOp[DT, T, U]
+type ltVV[DT any] struct {
+	ltOp[DT]
 	binopVV
 }
 
-type ltVVRS[DT any, T values.Value[DT]] struct {
-	ltOpRS[DT, T]
+type ltVVRS[DT any] struct {
+	ltOpRS[DT]
 	binopVV
 }
 
 // Type returns the type: (·) (·) :  a → a → b
-func (op ltVV[DT, T, U]) Type() hm.Type {
+func (op ltVV[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // (T a) or a
 	b := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
 	return types.NewFunc(a, a, b)
 }
 
 // Type returns the type: (·) :  a → a → a
-func (op ltVVRS[DT, T]) Type() hm.Type {
+func (op ltVVRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a) or a
 	return types.NewFunc(a, a, a)
 }
 
 // ltVS is a tensor-scalar elementwise less-than.
-type ltVS[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	ltOp[DT, T, U]
+type ltVS[DT any] struct {
+	ltOp[DT]
 	binopVS
 }
 
 // ltVSRS is a tensor-scalar elementwise less-than.
-type ltVSRS[DT any, T values.Value[DT]] struct {
-	ltOpRS[DT, T]
+type ltVSRS[DT any] struct {
+	ltOpRS[DT]
 	binopVS
 }
 
 // String implements fmt.Stringer.
-func (op ltVS[DT, T, U]) String() string { return "<·" }
+func (op ltVS[DT]) String() string { return "<·" }
 
 // String implements fmt.Stringer.
-func (op ltVSRS[DT, T]) String() string { return "<·" }
+func (op ltVSRS[DT]) String() string { return "<·" }
 
 // Type returns the type: (·) :  a → b → c
-func (op ltVS[DT, T, U]) Type() hm.Type {
+func (op ltVS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // (T a)
 	b := hm.TypeVariable('b')               // a
 	c := types.MakeDependent(a, dtype.Bool) // (T Bool) or Bool
@@ -186,32 +181,32 @@ func (op ltVS[DT, T, U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → a
-func (op ltVSRS[DT, T]) Type() hm.Type {
+func (op ltVSRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // (T a) or a
 	b := hm.TypeVariable('b') // b
 	return types.NewFunc(a, b, a)
 }
 
 // ltSV is a scalar-tensor elementwise less-than.
-type ltSV[DT any, T values.Value[DT], U values.Value[bool]] struct {
-	ltOp[DT, T, U]
+type ltSV[DT any] struct {
+	ltOp[DT]
 	binopSV
 }
 
 // ltSV is a scalar-tensor elementwise less-than.
-type ltSVRS[DT any, T values.Value[DT]] struct {
-	ltOpRS[DT, T]
+type ltSVRS[DT any] struct {
+	ltOpRS[DT]
 	binopSV
 }
 
 // String implements fmt.Stringer.
-func (op ltSV[DT, T, U]) String() string { return "·<" }
+func (op ltSV[DT]) String() string { return "·<" }
 
 // String implements fmt.Stringer.
-func (op ltSVRS[DT, T]) String() string { return "·<" }
+func (op ltSVRS[DT]) String() string { return "·<" }
 
 // Type returns the type: (·) :  a → b → c
-func (op ltSV[DT, T, U]) Type() hm.Type {
+func (op ltSV[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')               // U
 	b := hm.TypeVariable('b')               // (T U) or U
 	c := types.MakeDependent(b, dtype.Bool) // (T Bool) or Bool
@@ -219,7 +214,7 @@ func (op ltSV[DT, T, U]) Type() hm.Type {
 }
 
 // Type returns the type: (·) : a → b → b
-func (op ltSVRS[DT, T]) Type() hm.Type {
+func (op ltSVRS[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a') // a
 	b := hm.TypeVariable('b') // (T b) or b
 	return types.NewFunc(a, b, b)
