@@ -27,8 +27,8 @@ type RxNode interface {
 	O() ops.Desc
 }
 
-type Oper[DT any, T values.Value[DT]] interface {
-	Op() ops.Op[DT, T]
+type Oper[DT any] interface {
+	Op() ops.Op[DT]
 }
 
 type graphSetter interface {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/chewxy/hm"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/shapes"
+	"gorgonia.org/tensor"
 )
 
 // Desc represents a description of an operation
@@ -25,7 +25,7 @@ type Desc interface {
 	fmt.Stringer
 }
 
-func GetOp[DT any, T values.Value[DT]](op Desc) (Op[DT, T], error) { panic("NYI") }
+func GetOp[DT any](op Desc) (Op[DT], error) { panic("NYI") }
 
 // An Op is a symbolic representation of an operation
 // Think of them as functions, taking an input (or multiple), and outputting something
@@ -35,37 +35,37 @@ func GetOp[DT any, T values.Value[DT]](op Desc) (Op[DT, T], error) { panic("NYI"
 //	OpName :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
 //
 // All Ops need to know somethings about themselves - there is no support for generic Ops.
-type Op[DT any, T values.Value[DT]] interface {
+type Op[DT any] interface {
 	Desc
 
 	// Do executes the op.
-	Do(ctx context.Context, vs ...T) (retVal T, err error)
+	Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error)
 }
 
 // HKOp is a special kind of op
-type HKOp[DT1, DT2 any, T values.Value[DT1], U values.Value[DT2]] interface {
+type HKOp[DT1, DT2 any] interface {
 	Desc
-	Do(ctx context.Context, vs ...T) (retVal U, err error)
+	Do(ctx context.Context, vs ...tensor.Basic[DT1]) (retVal tensor.Basic[DT2], err error)
 }
 
 // PreallocOp represents and Op that has a PreallocDo() method. The PreallocDo method is exactly the same as Do() except it also requres a previously preallocated value.
-type PreallocOp[DT any, T values.Value[DT]] interface {
-	Op[DT, T]
+type PreallocOp[DT any] interface {
+	Op[DT]
 
 	// PreallocDo performs the Op with the return value passed in as a preallocated value.
-	PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error)
+	PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error)
 }
 
 // PreallocHKOp represents and Op that has a PreallocDo() method. The PreallocDo method is exactly the same as Do() except it also requres a previously preallocated value.
-type PreallocHKOp[DT1, DT2 any, T values.Value[DT1], U values.Value[DT2]] interface {
-	HKOp[DT1, DT2, T, U]
+type PreallocHKOp[DT1, DT2 any] interface {
+	HKOp[DT1, DT2]
 
-	PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal U, err error)
+	PreallocDo(ctx context.Context, prealloc tensor.Basic[DT2], vs ...tensor.Basic[DT1]) (retVal tensor.Basic[DT1], err error)
 }
 
 // AnalyzableOp is any Op that provides enough intensionality for analysis during compilation phase.
-type AnalyzableOp[DT any, T values.Value[DT]] interface {
-	Op[DT, T]
+type AnalyzableOp[DT any] interface {
+	Op[DT]
 
 	// CallsExtern informs if an op potentially call external (cgo or cuda) functions (thereby requiring extra overhead for Go's trampolining thing)
 	CallsExtern() bool
@@ -82,8 +82,8 @@ type Statement interface {
 }
 
 // Partial represents a partially applied operator.
-type Partial[DT any, T values.Value[DT]] interface {
-	Op[DT, T]
+type Partial[DT any] interface {
+	Op[DT]
 	Operands() []Operand
 }
 
