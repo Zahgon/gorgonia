@@ -27,8 +27,8 @@ type obs struct {
 }
 
 // RxEngine is a reactive engine for Gorgonia
-type RxEngine[DT any, T tensor.Basic[DT]] struct {
-	StandardEngine[DT, T]
+type RxEngine[DT any] struct {
+	StandardEngine[DT]
 	g        *exprgraph.Graph
 	q        chan obs // queue of nodes to be updated
 	lifter   exprgraph.Lifter
@@ -41,11 +41,11 @@ type RxEngine[DT any, T tensor.Basic[DT]] struct {
 
 }
 
-func NewRx[DT tensor.Num, T tensor.Basic[DT]](e StandardEngine[DT, T], g *exprgraph.Graph) *RxEngine[DT, T] {
+func NewRx[DT tensor.Num, T tensor.Basic[DT]](e StandardEngine[DT], g *exprgraph.Graph) *RxEngine[DT] {
 	if e == nil {
 		panic("Pass in a StandardEngine")
 	}
-	eng := &RxEngine[DT, T]{
+	eng := &RxEngine[DT]{
 		StandardEngine: e,
 	}
 
@@ -65,12 +65,12 @@ func NewRx[DT tensor.Num, T tensor.Basic[DT]](e StandardEngine[DT, T], g *exprgr
 	return eng
 }
 
-func (e *RxEngine[DT, T]) Graph() *exprgraph.Graph { return e.g }
+func (e *RxEngine[DT]) Graph() *exprgraph.Graph { return e.g }
 
-func (e *RxEngine[DT, T]) SetGraph(g *exprgraph.Graph) { e.g = g }
+func (e *RxEngine[DT]) SetGraph(g *exprgraph.Graph) { e.g = g }
 
 // Lift implements lift only iff the underlying StandardEngine is a Lifter.
-func (e *RxEngine[DT, T]) Lift(a datatypes.Tensor) datatypes.Tensor {
+func (e *RxEngine[DT]) Lift(a datatypes.Tensor) datatypes.Tensor {
 	return e.lifter.Lift(a)
 	// if lifter, ok := e.StandardEngine.(exprgraph.Lifter); ok {
 	// 	return lifter.Lift(a)
@@ -79,7 +79,7 @@ func (e *RxEngine[DT, T]) Lift(a datatypes.Tensor) datatypes.Tensor {
 }
 
 // NotifyUpdated tells the engine that `a` has been updated.
-func (e *RxEngine[DT, T]) NotifyUpdated(a datatypes.Tensor) {
+func (e *RxEngine[DT]) NotifyUpdated(a datatypes.Tensor) {
 	e.l.Lock()
 	if e.cancelCurrent != nil {
 		e.cancelCurrent()
@@ -96,11 +96,11 @@ func (e *RxEngine[DT, T]) NotifyUpdated(a datatypes.Tensor) {
 }
 
 // Wait waits for the engine to finish updating.
-func (e *RxEngine[DT, T]) Wait() { e.wg.Wait() }
+func (e *RxEngine[DT]) Wait() { e.wg.Wait() }
 
 // loop is the main loop for doing things. It pick nodes up from the `e.q` channel, and then
 // flow the data up and down the graph.
-func (e *RxEngine[DT, T]) loop() {
+func (e *RxEngine[DT]) loop() {
 	for o := range e.q {
 
 		n := o.n
@@ -126,7 +126,7 @@ func (e *RxEngine[DT, T]) loop() {
 // Given a node, it computes the results of the parent node(s).
 // If the parent node(s) themselves have parent node(s), those parent nodes will
 // be placed into the queue.
-func (e *RxEngine[DT, T]) flowUp(ctx context.Context, n exprgraph.Node) int {
+func (e *RxEngine[DT]) flowUp(ctx context.Context, n exprgraph.Node) int {
 	parents := e.g.ParentsOfAsNodes(n)
 
 	var nonRootParents int
@@ -146,7 +146,7 @@ func (e *RxEngine[DT, T]) flowUp(ctx context.Context, n exprgraph.Node) int {
 
 // flowDown recomputes the value of `n`, and recomputes any of the children if need be.
 // The criteria for recomputation is in the .Waiting() method of a `Node`.
-func (e *RxEngine[DT, T]) flowDown(ctx context.Context, node exprgraph.Node) error {
+func (e *RxEngine[DT]) flowDown(ctx context.Context, node exprgraph.Node) error {
 	n := node.(exprgraph.RxNode)
 	childrenOfN := e.g.ChildrenOfAsNodes(node)
 	children := exprgraph.TsFromNodes[exprgraph.RxNode](childrenOfN)
@@ -163,16 +163,16 @@ func (e *RxEngine[DT, T]) flowDown(ctx context.Context, node exprgraph.Node) err
 		}
 	}
 
-	childValues := make([]T, 0, len(children))
+	childValues := make([]tensor.Basic[DT], 0, len(children))
 	for _, c := range children {
 		v := exprgraph.T2B[DT](c)
-		childValues = append(childValues, v.(T))
+		childValues = append(childValues, v.(tensor.Basic[DT]))
 	}
 
 	switch o := n.O().(type) {
-	case ops.PreallocOp[DT, T]:
+	case ops.PreallocOp[DT]:
 		v := exprgraph.T2B[DT](n)
-		if _, err := o.PreallocDo(ctx, v.(T), childValues...); err != nil {
+		if _, err := o.PreallocDo(ctx, v.(tensor.Basic[DT]), childValues...); err != nil {
 			n.AddWaiting()
 			return err
 		}
