@@ -5,9 +5,10 @@ import (
 	"sync"
 
 	"gorgonia.org/gorgonia/internal"
+	"gorgonia.org/tensor"
 )
 
-type Im2ColOp struct {
+type ImColParams struct {
 	H, W                 int // kernel height and  width
 	PadH, PadW           int
 	StrideH, StrideW     int
@@ -23,7 +24,7 @@ type Im2ColOp struct {
 }
 
 // Im2Col implements an optimized version of the kernel for the Im2Col Op for CPU execution.
-func Im2Col[DT any](ctx context.Context, op Im2ColOp, im, col []DT, wg *sync.WaitGroup, workers chan struct{}) {
+func Im2Col[DT tensor.Num](ctx context.Context, op ImColParams, im, col []DT, wg *sync.WaitGroup, workers chan struct{}) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return
 	}
@@ -63,7 +64,8 @@ func Im2Col[DT any](ctx context.Context, op Im2ColOp, im, col []DT, wg *sync.Wai
 	wg.Done()
 }
 
-func Col2Im[DT any](ctx context.Context, op Im2ColOp, col, im []DT, wg *sync.WaitGroup, workers chan struct{}) {
+// Col2Im is the differentiation operation for Im2Col.
+func Col2Im[DT tensor.Num](ctx context.Context, op ImColParams, col, im []DT, wg *sync.WaitGroup, workers chan struct{}) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return
 	}
@@ -87,7 +89,7 @@ func Col2Im[DT any](ctx context.Context, op Im2ColOp, col, im []DT, wg *sync.Wai
 			for ch := 0; ch < chans; ch++ {
 				for kernelRow := 0; kernelRow < op.H; kernelRow++ {
 					inputRow = -op.PadH + kernelRow*op.DilationH + outputRow*op.StrideH
-					for kernelCol := 0; kernelCol < op.w; kernelCol++ {
+					for kernelCol := 0; kernelCol < op.W; kernelCol++ {
 						if inputRow < 0 || inputRow >= height {
 							colIdx++
 							continue

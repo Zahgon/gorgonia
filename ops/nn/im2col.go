@@ -19,7 +19,7 @@ import (
 	"gorgonia.org/tensor"
 )
 
-type im2col[DT any, T values.Value[DT]] struct {
+type im2col[DT tensor.Num, T values.Value[DT]] struct {
 	h, w                 int // kernel height and  width
 	padH, padW           int
 	strideH, strideW     int
@@ -27,35 +27,38 @@ type im2col[DT any, T values.Value[DT]] struct {
 }
 
 // Im2Col creates a PreallocOp that converts a BCHW image block to column. The kernel, pad and stride parameter must be shape of size 2, no more no less.
-// This poor naming scheme clearly comes from matlab
-func Im2Col[DT any, T values.Value[DT]](kernel, pad, stride, dilation shapes.Shape) (retVal ops.PreallocOp[DT, T], err error) {
+// This poor naming scheme clearly comes from matlab.
+func Im2Col[DT tensor.Num, T values.Value[DT]](kernel, pad, stride, dilation shapes.Shape) (retVal ops.PreallocOp[DT, T], err error) {
+	return makeIm2Col[DT, T](kernel, pad, stride, dilation)
+}
+func makeIm2Col[DT tensor.Num, T values.Value[DT]](kernel, pad, stride, dilation shapes.Shape) (retVal im2col[DT, T], err error) {
 	if kernel.Dims() != 2 {
-		return nil, errors.Errorf("kernel shape is supposed to have a dim of 2")
+		return retVal, errors.Errorf("kernel shape is supposed to have a dim of 2")
 	}
 	if pad.Dims() != 2 {
-		return nil, errors.Errorf("pad is supposed to have a dim of 2")
+		return retVal, errors.Errorf("pad is supposed to have a dim of 2")
 	}
 	if stride.Dims() != 2 {
-		return nil, errors.Errorf("strides is supposed to have a dim of 2")
+		return retVal, errors.Errorf("strides is supposed to have a dim of 2")
 	}
 	if dilation.Dims() != 2 {
-		return nil, errors.Errorf("dilation is supposed to have a dim of 2")
+		return retVal, errors.Errorf("dilation is supposed to have a dim of 2")
 	}
 
 	if kernel[0] <= 0 || kernel[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in kernel shape")
+		return retVal, errors.Errorf("cannot have negative or 0 in kernel shape")
 	}
 
 	if stride[0] <= 0 || stride[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in stride: %v", stride)
+		return retVal, errors.Errorf("cannot have negative or 0 in stride: %v", stride)
 	}
 
 	if pad[0] < 0 || pad[1] < 0 {
-		return nil, errors.Errorf("cannot have negative padding")
+		return retVal, errors.Errorf("cannot have negative padding")
 	}
 
 	if dilation[0] <= 0 || dilation[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in dilation. %v", dilation)
+		return retVal, errors.Errorf("cannot have negative or 0 in dilation. %v", dilation)
 	}
 
 	return im2col[DT, T]{
@@ -195,7 +198,7 @@ func (op im2col[DT, T]) do(ctx context.Context, prealloc, input T) (retVal T, er
 	imData := input.Data()
 	colData := prealloc.Data()
 
-	kernelParams := kernels.Im2ColOp{
+	kernelParams := kernels.ImColParams{
 		H: op.h, W: op.w,
 		PadH: op.padH, PadW: op.padW,
 		StrideH: op.strideH, StrideW: op.strideW,

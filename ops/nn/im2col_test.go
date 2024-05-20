@@ -75,6 +75,16 @@ func TestIm2Col(t *testing.T) {
 			}
 			assert.True(prealloc.Shape().Eq(retVal.Shape()))
 			assert.Equal(prealloc.Data(), retVal.Data())
+
+			// test col2im
+			d2 := retVal.Clone()
+			op, err = Col2Im[float64, *dense.Dense[float64]](tc.kernel, tc.pad, tc.stride, tc.dilation, d.Shape())
+			retVal, err = op.Do(context.Background(), d2)
+			if err != nil {
+				t.Errorf("Col2Im failed %v", err)
+				return
+			}
+			assert.True(d.Shape().Eq(retVal.Shape()))
 		})
 	}
 }
