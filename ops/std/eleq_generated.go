@@ -75,7 +75,7 @@ func (op elEqOpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) 
 		return retVal, err
 	}
 
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	comparer, ok := e.(tensor.Comparer[DT])
 	if !ok {

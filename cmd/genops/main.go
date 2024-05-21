@@ -88,8 +88,10 @@ func goimports(filename string) error {
 
 func generateBinOp(ops []Op, tmpl *template.Template, unstubbedSymDiffs, unstubbedDoDiffs []string) error {
 	for _, op := range ops {
+		log.Printf("Op %v", op)
 		filename := strings.ToLower(op.Name) + "_generated.go"
 		p := path.Join(stdopsloc, filename)
+		log.Printf("Op %v in %v", op, p)
 		f, err := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if err != nil {
 			return err
@@ -376,13 +378,17 @@ func unstubbed(file io.Reader, name string) []string {
 			}
 		case *ast.IndexListExpr:
 			recv = r0.X.(*ast.Ident).Name
+		case *ast.IndexExpr:
+			recv = r0.X.(*ast.Ident).Name
 		default:
+
 			log.Printf("ERROR: UNSUPPORTED TYPE %v(%T) in %v", fn.Recv.List[0].Type, fn.Recv.List[0].Type, name)
 		}
 
 		ignored = append(ignored, strings.TrimSuffix(recv, "Op"))
 		return false
 	})
+	log.Printf("Ignored %v", ignored)
 	return ignored
 }
 

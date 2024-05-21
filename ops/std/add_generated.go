@@ -30,7 +30,7 @@ func (op addOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (re
 		return retVal, err
 	}
 	toIncr := fo.Incr
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	adder, ok := e.(tensor.Adder[DT])
 	if !ok {

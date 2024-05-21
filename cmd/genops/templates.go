@@ -24,7 +24,7 @@ func (op {{.Name}}Op[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT
 		return retVal, err
 	}
 	toIncr := fo.Incr
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT]);
 	if !ok {
@@ -153,7 +153,7 @@ func (op {{.Name}}OpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[
 		return retVal, err
 	}
 
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	{{.InterfaceName | lower}}, ok := e.(tensor.{{.InterfaceName}}[DT]);
 	if !ok {

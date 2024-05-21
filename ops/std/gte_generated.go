@@ -75,7 +75,7 @@ func (op gteOpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (
 		return retVal, err
 	}
 
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	fullord, ok := e.(tensor.FullOrd[DT])
 	if !ok {

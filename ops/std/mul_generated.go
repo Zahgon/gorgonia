@@ -30,7 +30,7 @@ func (op mulOp[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (re
 		return retVal, err
 	}
 	toIncr := fo.Incr
-	toBroadcast := fo.Broadcast
+	toBroadcast := fo.Broadcast.BroadcastData()
 
 	basicarither, ok := e.(tensor.BasicArither[DT])
 	if !ok {

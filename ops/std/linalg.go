@@ -38,7 +38,7 @@ func (op MatMul[DT]) ShapeExpr() shapes.Expr {
 	)
 }
 
-func (op MatMul[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op MatMul[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -53,11 +53,9 @@ func (op MatMul[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err er
 	}
 	expShape := elimInnermostOutermost(a.Shape(), b.Shape())
 
-	var ret tensor.Basic[DT]
-	if ret, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
+	if retVal, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
-	retVal = ret.(T)
 
 	var bla tensor.BLA[DT]
 	if bla, ok = e.(tensor.BLA[DT]); !ok {
@@ -73,8 +71,8 @@ func (op MatMul[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err er
 }
 
 // Do performs the matrix multiplication.
-func (op MatMul[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
-	var prealloc T
+func (op MatMul[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
+	var prealloc tensor.Basic[DT]
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
@@ -82,7 +80,7 @@ func (op MatMul[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs the matrix multiplication with a preallocated value.
 // PreallocDo allows MatMul to implement ops.PreallocDo
-func (op MatMul[DT]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op MatMul[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
@@ -160,7 +158,7 @@ func (op MatVecMul[DT]) ShapeExpr() shapes.Expr {
 	)
 }
 
-func (op MatVecMul[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op MatVecMul[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -195,16 +193,16 @@ func (op MatVecMul[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err
 }
 
 // Do performs the matrix-vector multiplication.
-func (op MatVecMul[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op MatVecMul[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
+	var prealloc tensor.Basic[DT]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // PreallocDo performs the matrix-vector multiplication with a preallocated value.
 // PreallocDo allows MatMul to implement ops.PreallocDo
-func (op MatVecMul[DT]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op MatVecMul[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)
@@ -233,7 +231,7 @@ func (op Inner[DT]) ShapeExpr() shapes.Expr {
 	)
 }
 
-func (op Inner[DT]) do(ctx context.Context, a, b T) (retVal DT, err error) {
+func (op Inner[DT]) do(ctx context.Context, a, b tensor.Basic[DT]) (retVal DT, err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -250,11 +248,11 @@ func (op Inner[DT]) do(ctx context.Context, a, b T) (retVal DT, err error) {
 }
 
 // Do performs the inner product operation.
-func (op Inner[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op Inner[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	ret, err := op.do(ctx, a, b)
-	t, ok := any(a).(tensor.Aliker[T])
+	t, ok := any(a).(tensor.Aliker[tensor.Basic[DT]])
 	if !ok {
 		return retVal, errors.Errorf("Unable to construct a tensor of type %T representing a scalar value", a)
 	}
@@ -264,7 +262,7 @@ func (op Inner[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 // PreallocDo performs the inner product operation with a preallocated value.
 // PreallocDo allows MatMul to implement ops.PreallocDo
-func (op Inner[DT]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op Inner[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	if err = internal.HandleNoOp(prealloc.Reshape()); err != nil {
@@ -323,7 +321,7 @@ func (op Outer[DT]) ShapeExpr() shapes.Expr {
 	)
 }
 
-func (op Outer[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err error) {
+func (op Outer[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -338,10 +336,9 @@ func (op Outer[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err err
 
 	var ret tensor.Basic[DT]
 	expShape := shapes.Shape{a.Shape().TotalSize(), b.Shape().TotalSize()}
-	if ret, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
+	if retVal, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
-	retVal = ret.(T)
 
 	var bla tensor.BLA[DT]
 	if bla, ok = e.(tensor.BLA[DT]); !ok {
@@ -361,16 +358,16 @@ func (op Outer[DT]) do(ctx context.Context, a, b, prealloc T) (retVal T, err err
 }
 
 // Do performs the outer product operation.
-func (op Outer[DT]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op Outer[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	var prealloc T
+	var prealloc tensor.Basic[DT]
 	return op.do(ctx, a, b, prealloc)
 }
 
 // PreallocDo performs the outer product operation with a preallocated value.
 // PreallocDo allows MatMul to implement ops.PreallocDo
-func (op Outer[DT]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op Outer[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
 	return op.do(ctx, a, b, prealloc)

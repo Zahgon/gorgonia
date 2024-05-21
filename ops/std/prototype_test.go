@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	_ Abser[float64, *dense.Dense[float64]] = dense.StdFloat64Engine[*dense.Dense[float64]]{}
+	_ Abser[float64] = dense.StdFloat64Engine[*dense.Dense[float64]]{}
 )
 
 func TestAdd__(t *testing.T) {
