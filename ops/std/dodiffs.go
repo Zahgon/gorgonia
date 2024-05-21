@@ -9,14 +9,14 @@ import (
 )
 
 // DoDiff is the method that allows automatic differentiation of `add`.
-func (op addOp[DT, T]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) (err error) {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT, T])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT, T])
+func (op addOp[DT]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) (err error) {
+	//adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT, T])
+	//bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT, T])
 
-	advd := adv.Deriv()
-	bdvd := bdv.Deriv()
+	//advd := adv.Deriv()
+	//bdvd := bdv.Deriv()
 
-	_, _ = advd, bdvd
+	//_, _ = advd, bdvd
 
 	// ones := one(adv.Dtype())
 

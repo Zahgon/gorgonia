@@ -51,44 +51,44 @@ func denseReduction[DT any](task *trace.Task, ctx context.Context, f func(t *den
 	return ret, err
 }
 
-type Reduction[DT any, T values.Value[DT]] struct {
-	op    ops.Op[DT, T]
+type Reduction[DT any] struct {
+	op    ops.Op[DT]
 	along shapes.Axes
-	def   T
+	//def   T
 }
 
 // Arity returns the number of inputs the Op expects. -1 indicates that it's n-ary and will be determined at runtime.
-func (op *Reduction[DT, T]) Arity() int { return 1 }
+func (op *Reduction[DT]) Arity() int { return 1 }
 
 // Type informs the type of the Op (not the node). This will be used by the type system to infer the final type of the node.
-func (op *Reduction[DT, T]) Type() hm.Type { return reductionTypeExpr(op.along) }
+func (op *Reduction[DT]) Type() hm.Type { return reductionTypeExpr(op.along) }
 
 // ShapeExpr informs the shape operations that the Op will do. A quick primer is given in the README of the shapes package.
-func (op *Reduction[DT, T]) ShapeExpr() shapes.Expr { return reductionShapeExpr(op.along) }
+func (op *Reduction[DT]) ShapeExpr() shapes.Expr { return reductionShapeExpr(op.along) }
 
 // Do executes the op.
-func (op *Reduction[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op *Reduction[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (op *Reduction[DT, T]) String() string { return fmt.Sprintf("%v/", op.op) }
+func (op *Reduction[DT]) String() string { return fmt.Sprintf("%v/", op.op) }
 
 // Sum is an op that performs a reduction with + along the given axes
-type Sum[DT tensor.Num, T values.Value[DT]] struct {
+type Sum[DT tensor.Num] struct {
 	along shapes.Axes
 }
 
 // Arity returns the number of inputs the Op expects. -1 indicates that it's n-ary and will be determined at runtime.
-func (op *Sum[DT, T]) Arity() int { return 1 }
+func (op *Sum[DT]) Arity() int { return 1 }
 
 // Type informs the type of the Op (not the node). This will be used by the type system to infer the final type of the node.
-func (op *Sum[DT, T]) Type() hm.Type { return reductionTypeExpr(op.along) }
+func (op *Sum[DT]) Type() hm.Type { return reductionTypeExpr(op.along) }
 
 // ShapeExpr informs the shape operations that the Op will do. A quick primer is given in the README of the shapes package.
-func (op *Sum[DT, T]) ShapeExpr() shapes.Expr { return reductionShapeExpr(op.along) }
+func (op *Sum[DT]) ShapeExpr() shapes.Expr { return reductionShapeExpr(op.along) }
 
 // Do executes the op.
-func (op *Sum[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op *Sum[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -108,10 +108,10 @@ func (op *Sum[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 	}
 }
 
-func (op *Sum[DT, T]) String() string { return "∑" }
+func (op *Sum[DT]) String() string { return "∑" }
 
-func (op *Sum[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op *Sum[DT]) DiffWRT(inputs int) []bool { return onetrue }
 
-func (op *Sum[DT, T]) SymDiff(g *exprgraph.Graph, inputs []*exprgraph.Node, output *exprgraph.Node, grad *exprgraph.Node) (retVal []*exprgraph.Node, err error) {
+func (op *Sum[DT]) SymDiff(g *exprgraph.Graph, inputs []*exprgraph.Node, output *exprgraph.Node, grad *exprgraph.Node) (retVal []*exprgraph.Node, err error) {
 	panic("not implemented") // TODO: Implement
 }
