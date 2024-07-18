@@ -2,7 +2,6 @@ package exprgraph
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/chewxy/hm"
@@ -27,10 +26,8 @@ func T2B[DT any](a Tensor) tensor.Basic[DT] {
 		}
 		return nil
 	case dual.Value[DT]:
-		log.Printf("dual")
 		return t
 	case tensor.Basic[DT]:
-		log.Printf("basic")
 		return t
 	default:
 		return nil

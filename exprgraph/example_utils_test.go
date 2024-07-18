@@ -19,6 +19,8 @@ import (
 
 var (
 	_ ops.Op[float64] = matmul[float64]{}
+	_ ADOp[float64]   = add[float64]{}
+	_ ADOp[float64]   = matmul[float64]{}
 )
 
 type NoOp struct{}
@@ -45,7 +47,7 @@ type ADOp[DT any] interface {
 }
 
 type Queueer[DT any] interface {
-	Q(op ops.Op[DT], inputs []gorgonia.Tensor, output gorgonia.Tensor) error
+	Q(op ops.Op[DT], inputs []tensor.Basic[DT], output tensor.Basic[DT]) error
 }
 
 type matmuler[T any] interface {
@@ -247,7 +249,7 @@ func MatMul[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err er
 	}
 	if q != nil {
 		// do queue stuff here
-		err = q.Q(op, []gorgonia.Tensor{a, b}, retVal)
+		err = q.Q(op, []tensor.Basic[DT]{at, bt}, ct)
 	}
 	return
 }
@@ -313,7 +315,7 @@ func (op add[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs 
 
 }
 
-func (op add[DT]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output gorgonia.Tensor) error {
+func (op add[DT]) DoDiff(ctx context.Context, inputs []tensor.Basic[DT], output tensor.Basic[DT]) error {
 	adv := exprgraph.T2B[DT](inputs[0]).(dual.Value[DT])
 	bdv := exprgraph.T2B[DT](inputs[1]).(dual.Value[DT])
 
@@ -324,12 +326,10 @@ func (op add[DT]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output g
 	for i := range data {
 		data[i] += 1
 	}
-
 	data = bdvd.Data()
 	for i := range data {
 		data[i] += 1
 	}
-
 	return nil
 }
 
@@ -430,7 +430,7 @@ func Add[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error
 	}
 	if q != nil {
 		// do queue stuff here
-		err = q.Q(op, []gorgonia.Tensor{a, b}, retVal)
+		err = q.Q(op, []tensor.Basic[DT]{at, bt}, ct)
 	}
 
 	return

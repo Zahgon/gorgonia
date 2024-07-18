@@ -14,6 +14,7 @@ import (
 
 var (
 	_ tensor.BLA[float64] = &BwdEngine[float64, *dense.Dense[float64]]{}
+	_ Queueer[float64]    = &BwdEngine[float64, *dense.Dense[float64]]{}
 )
 
 type adInstr[DT any] struct {
@@ -23,7 +24,9 @@ type adInstr[DT any] struct {
 	output tensor.Basic[DT]
 }
 
-func (ad adInstr[DT]) do(ctx context.Context) error { return ad.DoDiff(ctx, ad.inputs, ad.output) }
+func (ad adInstr[DT]) do(ctx context.Context) error {
+	return ad.DoDiff(ctx, ad.inputs, ad.output)
+}
 
 // BwdEngine is an Engine that performs backwards mode diffentiation.
 type BwdEngine[DT tensor.Num, T tensor.Tensor[DT, T]] struct {
