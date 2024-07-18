@@ -301,10 +301,12 @@ func Example_rx_engine_composed() {
 	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	getD := getDeriv[float64, *dense.Dense[float64]]
 

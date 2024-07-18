@@ -224,7 +224,7 @@ func MatMul[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err er
 	case aok && bok && retVal == nil:
 		// we'd have to create one ourselves
 		shp := tensor.Shape{a.Shape()[0], b.Shape()[1]}
-		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = at.AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		log.Printf("One of a or b is not a value tensor a %T b %T", a, b)
@@ -408,7 +408,7 @@ func Add[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error
 		// we'd have to create one ourselves
 		// NOTICE: This example assumes that `Add` adds a matrix to a scalar.
 		shp := a.Shape()
-		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = at.AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		log.Printf("One of a or b is not a value tensor a %T b %T", a, b)
