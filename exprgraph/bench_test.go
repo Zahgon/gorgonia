@@ -42,11 +42,11 @@ func shortExpr[DT tensor.Num, T values.Value[DT]](g *exprgraph.Graph, x gorgonia
 	}
 	y := exprgraph.New[DT](g, rndName(), tensor.WithShape(2, 2), tensor.WithInit(randNum))
 	z := exprgraph.New[DT](g, rndName(), tensor.WithShape(), tensor.WithBacking([]float64{0}))
-	xy, err := MatMul[DT, T](x, y)
+	xy, err := MatMul[DT](x, y)
 	if err != nil {
 		return nil, err
 	}
-	return Add[DT, T](xy, z)
+	return Add[DT](xy, z)
 }
 
 func longExpr[DT tensor.Num, T values.Value[DT]](g *exprgraph.Graph, n int) (gorgonia.Tensor, error) {

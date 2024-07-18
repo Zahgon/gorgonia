@@ -83,6 +83,8 @@ func Add[DT any](a, b Tensor) (retVal Tensor, err error) {
 	// do the values stuff'
 	at := exprgraph.T2B[DT](a)
 	bt := exprgraph.T2B[DT](b)
+	aok, bok = at != nil, bt != nil
+
 	var ct tensor.Basic[DT]
 	switch {
 	case aok && bok && retVal != nil:

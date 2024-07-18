@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	_ ops.Op[float64, *dense.Dense[float64]] = matmul[float64, *dense.Dense[float64]]{}
+	_ ops.Op[float64] = matmul[float64]{}
 )
 
 type NoOp struct{}
@@ -32,20 +32,20 @@ type GraphEngine interface {
 	Graph() *exprgraph.Graph
 }
 
-type StandardEngine[DT any, T tensor.Basic[DT]] interface {
+type StandardEngine[DT any] interface {
 	tensor.Engine
 	tensor.FuncOptHandler[DT]
-	tensor.BLA[DT, T]
-	tensor.Adder[DT, T]
+	tensor.BLA[DT]
+	tensor.Adder[DT]
 }
 
-type ADOp[DT any, T tensor.Basic[DT]] interface {
-	ops.Op[DT, T]
-	DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output gorgonia.Tensor) error
+type ADOp[DT any] interface {
+	ops.Op[DT]
+	DoDiff(ctx context.Context, inputs []tensor.Basic[DT], output tensor.Basic[DT]) error
 }
 
-type Queueer[DT any, T tensor.Basic[DT]] interface {
-	Q(op ops.Op[DT, T], inputs []gorgonia.Tensor, output gorgonia.Tensor) error
+type Queueer[DT any] interface {
+	Q(op ops.Op[DT], inputs []gorgonia.Tensor, output gorgonia.Tensor) error
 }
 
 type matmuler[T any] interface {
@@ -53,18 +53,18 @@ type matmuler[T any] interface {
 }
 
 // matmul is an Op
-type matmul[DT tensor.Num, T tensor.Basic[DT]] struct{}
+type matmul[DT tensor.Num] struct{}
 
 // Arity returns the number of inputs the Op expects. -1 indicates that it's n-ary and will be determined at runtime.
-func (op matmul[DT, T]) Arity() int { return 2 }
+func (op matmul[DT]) Arity() int { return 2 }
 
 // Type informs the type of the Op (not the node). This will be used by the type system to infer the final type of the node.
-func (op matmul[DT, T]) Type() hm.Type {
+func (op matmul[DT]) Type() hm.Type {
 	return hm.NewFnType(hm.TypeVariable('a'), hm.TypeVariable('a'), hm.TypeVariable('a'))
 }
 
 // ShapeExpr informs the shape operations that the Op will do. A quick primer is given in the README of the shapes package.
-func (op matmul[DT, T]) ShapeExpr() shapes.Expr {
+func (op matmul[DT]) ShapeExpr() shapes.Expr {
 	a := shapes.Var('a')
 	b := shapes.Var('b')
 	c := shapes.Var('c')
@@ -76,7 +76,7 @@ func (op matmul[DT, T]) ShapeExpr() shapes.Expr {
 }
 
 // Do executes the op.
-func (op matmul[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op matmul[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if ctx != nil {
 		select {
 		case <-ctx.Done():
@@ -86,17 +86,17 @@ func (op matmul[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
 
 	}
 	a := vs[0]
-	b := vs[1]
-	mm, ok := any(a).(matmuler[T])
+	b := vs[1].(*dense.Dense[DT])
+	mm, ok := any(a).(matmuler[*dense.Dense[DT]]) // because :)
 	if !ok {
 		return retVal, errors.Errorf("expected %T to have a MatMul method", a)
 	}
 	return mm.MatMul(b)
 }
 
-func (op matmul[DT, T]) String() string { return "×" }
+func (op matmul[DT]) String() string { return "×" }
 
-func (op matmul[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op matmul[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if ctx != nil {
 		select {
 		case <-ctx.Done():
@@ -108,53 +108,53 @@ func (op matmul[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 	a := vs[0]
 	b := vs[1]
 	switch mm := any(a).(type) {
-	case matmuler[T]:
-		return mm.MatMul(b, tensor.WithReuse(prealloc))
+	case matmuler[*dense.Dense[DT]]:
+		return mm.MatMul(b.(*dense.Dense[DT]), tensor.WithReuse(prealloc))
 	default:
 		var ret tensor.Basic[DT]
 		if ret, err = tensor.MatMul[DT](a, b, tensor.WithReuse(prealloc)); err != nil {
 			return retVal, err
 		}
-		return ret.(T), nil
+		return ret, nil
 	}
 }
 
-func (op matmul[DT, T]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output gorgonia.Tensor) (err error) {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT, T])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT, T])
-	cdv := exprgraph.T2B[DT](output).(*dual.Dual[DT, T])
+func (op matmul[DT]) DoDiff(ctx context.Context, inputs []tensor.Basic[DT], output tensor.Basic[DT]) (err error) {
+	adv := exprgraph.T2B[DT](inputs[0]).(dual.Value[DT])
+	bdv := exprgraph.T2B[DT](inputs[1]).(dual.Value[DT])
+	cdv := exprgraph.T2B[DT](output).(dual.Value[DT])
 
-	advd := adv.Deriv()
-	bdvd := bdv.Deriv()
+	advd := adv.DVal()
+	bdvd := bdv.DVal()
 
 	// temporary transpose
-	var bdvT, advT T
-	if bdvT, err = bdv.V().(tensor.Operable[T]).T(); err != nil {
+	var bdvT, advT tensor.Basic[DT]
+	if bdvT, err = bdv.Val().(tensor.BasicOperable[DT]).TAsBasic(); err != nil {
 		return err
 	}
-	if advT, err = adv.V().(tensor.Operable[T]).T(); err != nil {
+	if advT, err = adv.Val().(tensor.BasicOperable[DT]).TAsBasic(); err != nil {
 		return err
 	}
 
 	// dA = C×B'
-	if _, err := op.PreallocDo(ctx, advd, cdv.Value(), bdvT); err != nil {
+	if _, err := op.PreallocDo(ctx, advd, cdv.Val(), bdvT); err != nil {
 		return err
 	}
 
 	// dB = A'×C
-	if _, err := op.PreallocDo(ctx, bdvd, advT, cdv.Value()); err != nil {
+	if _, err := op.PreallocDo(ctx, bdvd, advT, cdv.Val()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error) {
+func MatMul[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error) {
 	eng, ok := a.Engine().(GraphEngine)
 	if !ok {
 		eng, ok = b.Engine().(GraphEngine)
 	}
 
-	op := matmul[DT, T]{}
+	op := matmul[DT]{}
 	if ok {
 		// do symbolic stuff
 		g := eng.Graph()
@@ -197,12 +197,12 @@ func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gor
 	}
 
 	// check if engine supports MatMul. If not, return
-	_, aok := a.Engine().Workhorse().(tensor.BLA[DT, T])
-	_, bok := b.Engine().Workhorse().(tensor.BLA[DT, T])
+	_, aok := a.Engine().Workhorse().(tensor.BLA[DT])
+	_, bok := b.Engine().Workhorse().(tensor.BLA[DT])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().(tensor.BLA[DT, T])
-		_, bok = b.Engine().Workhorse().(tensor.BLA[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.BLA[DT])
+		_, bok = b.Engine().Workhorse().(tensor.BLA[DT])
 		if !aok && !bok {
 			return
 		}
@@ -210,20 +210,21 @@ func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gor
 
 	}
 	// do the values stuff
-	at, aok := exprgraph.T2T[DT, T](a)
-	bt, bok := exprgraph.T2T[DT, T](b)
-	var ct T
+	at := exprgraph.T2B[DT](a)
+	bt := exprgraph.T2B[DT](b)
+	aok, bok = at != nil, bt != nil
 
+	var ct tensor.Basic[DT]
 	switch {
 	case aok && bok && retVal != nil:
 		// both a and b  are values, so we can "materialize" c
-		rv := exprgraph.SymToVal[DT, T](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
+		rv := exprgraph.SymToVal[DT, tensor.Basic[DT]](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
 		retVal = rv
 		ct = rv.Value()
 	case aok && bok && retVal == nil:
 		// we'd have to create one ourselves
 		shp := tensor.Shape{a.Shape()[0], b.Shape()[1]}
-		ct = any(ct).(tensor.Aliker[T]).Alike(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		log.Printf("One of a or b is not a value tensor a %T b %T", a, b)
@@ -239,10 +240,10 @@ func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gor
 
 	// check if engine is backwards (i.e. requires a queue)
 	// if not, return.
-	var q Queueer[DT, T]
-	q, ok = a.Engine().Workhorse().(Queueer[DT, T])
+	var q Queueer[DT]
+	q, ok = a.Engine().Workhorse().(Queueer[DT])
 	if !ok {
-		q, ok = b.Engine().Workhorse().(Queueer[DT, T])
+		q, ok = b.Engine().Workhorse().(Queueer[DT])
 	}
 	if q != nil {
 		// do queue stuff here
@@ -251,42 +252,42 @@ func MatMul[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gor
 	return
 }
 
-type adder[DT, T any] interface {
-	Add(T, ...tensor.FuncOpt) (T, error)
-	AddScalar(s DT, scalarOnLeft bool, opts ...tensor.FuncOpt) (T, error)
+type adder[DT any] interface {
+	Add(tensor.Basic[DT], ...tensor.FuncOpt) (tensor.Basic[DT], error)
+	AddScalar(s DT, scalarOnLeft bool, opts ...tensor.FuncOpt) (tensor.Basic[DT], error)
 }
 
 // add is addition with a scalar on the right
-type add[DT tensor.Num, T tensor.Basic[DT]] struct{}
+type add[DT tensor.Num] struct{}
 
 // Arity returns the number of inputs the Op expects. -1 indicates that it's n-ary and will be determined at runtime.
-func (op add[DT, T]) Arity() int { return 2 }
+func (op add[DT]) Arity() int { return 2 }
 
 // Type informs the type of the Op (not the node). This will be used by the type system to infer the final type of the node.
-func (op add[DT, T]) Type() hm.Type {
+func (op add[DT]) Type() hm.Type {
 	return hm.NewFnType(hm.TypeVariable('a'), hm.TypeVariable('b'), hm.TypeVariable('a'))
 }
 
 // ShapeExpr informs the shape operations that the Op will do. A quick primer is given in the README of the shapes package.
-func (op add[DT, T]) ShapeExpr() shapes.Expr {
+func (op add[DT]) ShapeExpr() shapes.Expr {
 	a := shapes.Var('a')
 	return shapes.MakeArrow(a, shapes.ScalarShape(), a)
 }
 
 // Do executes the op.
-func (op add[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op add[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	a := vs[0]
 	b := vs[1]
-	mm, ok := any(a).(adder[DT, T])
+	mm, ok := any(a).(adder[DT])
 	if !ok {
 		return retVal, errors.Errorf("expected %T to have a Add method", a)
 	}
 	return mm.Add(b)
 }
 
-func (op add[DT, T]) String() string { return "+" }
+func (op add[DT]) String() string { return "+" }
 
-func (op add[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op add[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if ctx != nil {
 		select {
 		case <-ctx.Done():
@@ -299,24 +300,24 @@ func (op add[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVa
 	a := vs[0]
 	b := vs[1]
 	switch mm := any(a).(type) {
-	case adder[DT, T]:
+	case adder[DT]:
 		return mm.AddScalar(b.Data()[0], true, tensor.WithReuse(prealloc))
 	default:
 		var ret tensor.Basic[DT]
 		if ret, err = tensor.Add[DT](a, b, tensor.WithReuse(prealloc)); err != nil {
 			return retVal, err
 		}
-		return ret.(T), nil
+		return ret, nil
 	}
 
 }
 
-func (op add[DT, T]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output gorgonia.Tensor) error {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT, T])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT, T])
+func (op add[DT]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, output gorgonia.Tensor) error {
+	adv := exprgraph.T2B[DT](inputs[0]).(dual.Value[DT])
+	bdv := exprgraph.T2B[DT](inputs[1]).(dual.Value[DT])
 
-	advd := adv.Deriv()
-	bdvd := bdv.Deriv()
+	advd := adv.DVal()
+	bdvd := bdv.DVal()
 	// this should be replaced with a kernel call somewhere
 	data := advd.Data()
 	for i := range data {
@@ -331,13 +332,13 @@ func (op add[DT, T]) DoDiff(ctx context.Context, inputs []gorgonia.Tensor, outpu
 	return nil
 }
 
-func Add[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error) {
+func Add[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error) {
 	eng, ok := a.Engine().(GraphEngine)
 	if !ok {
 		eng, ok = b.Engine().(GraphEngine)
 	}
 
-	op := add[DT, T]{}
+	op := add[DT]{}
 	if ok {
 		// do symbolic stuff
 		g := eng.Graph()
@@ -379,12 +380,12 @@ func Add[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgon
 	}
 
 	// check if engine supports Add. If not, return
-	_, aok := a.Engine().Workhorse().(tensor.Adder[DT, T])
-	_, bok := b.Engine().Workhorse().(tensor.Adder[DT, T])
+	_, aok := a.Engine().Workhorse().(tensor.Adder[DT])
+	_, bok := b.Engine().Workhorse().(tensor.Adder[DT])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().(tensor.Adder[DT, T])
-		_, bok = b.Engine().Workhorse().(tensor.Adder[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.Adder[DT])
+		_, bok = b.Engine().Workhorse().(tensor.Adder[DT])
 		if !aok && !bok {
 			return
 		}
@@ -392,20 +393,22 @@ func Add[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgon
 
 	}
 	// do the values stuff'
-	at, aok := exprgraph.T2T[DT, T](a)
-	bt, bok := exprgraph.T2T[DT, T](b)
-	var ct T
+	at := exprgraph.T2B[DT](a)
+	bt := exprgraph.T2B[DT](b)
+	aok, bok = at != nil, bt != nil
+
+	var ct tensor.Basic[DT]
 	switch {
 	case aok && bok && retVal != nil:
 		// both a and b  are values, so we can "materialize" c
-		rv := exprgraph.SymToVal[DT, T](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
+		rv := exprgraph.SymToVal[DT, tensor.Basic[DT]](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
 		retVal = rv
 		ct = rv.Value()
 	case aok && bok && retVal == nil:
 		// we'd have to create one ourselves
 		// NOTICE: This example assumes that `Add` adds a matrix to a scalar.
 		shp := a.Shape()
-		ct = any(ct).(tensor.Aliker[T]).Alike(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		log.Printf("One of a or b is not a value tensor a %T b %T", a, b)
@@ -420,10 +423,10 @@ func Add[DT tensor.Num, T tensor.Basic[DT]](a, b gorgonia.Tensor) (retVal gorgon
 
 	// check if engine is backwards (i.e. requires a queue)
 	// if not, return.
-	var q Queueer[DT, T]
-	q, ok = a.Engine().Workhorse().(Queueer[DT, T])
+	var q Queueer[DT]
+	q, ok = a.Engine().Workhorse().(Queueer[DT])
 	if !ok {
-		q, ok = b.Engine().Workhorse().(Queueer[DT, T])
+		q, ok = b.Engine().Workhorse().(Queueer[DT])
 	}
 	if q != nil {
 		// do queue stuff here

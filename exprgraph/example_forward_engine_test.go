@@ -11,8 +11,8 @@ import (
 	"gorgonia.org/tensor/dense"
 )
 
-var _ tensor.BLA[float64, tensor.Basic[float64]] = (&FwdEngine[float64, *dense.Dense[float64]]{}).BasicEng().(*FwdEngine[float64, *dense.Dense[float64]])
-var _ tensor.Adder[float64, tensor.Basic[float64]] = &FwdEngine[float64, *dense.Dense[float64]]{}
+var _ tensor.BLA[float64] = (&FwdEngine[float64, *dense.Dense[float64]]{})
+var _ tensor.Adder[float64] = &FwdEngine[float64, *dense.Dense[float64]]{}
 
 // FwdEngine is a Engine that performs forwards mode differentiation
 //
@@ -20,7 +20,7 @@ var _ tensor.Adder[float64, tensor.Basic[float64]] = &FwdEngine[float64, *dense.
 // Obviously in the real world situation, Add also needs to be implemented, but in this example
 // we are not going to call Add, only AddScalar.
 type FwdEngine[DT tensor.Num, T tensor.Basic[DT]] struct {
-	StandardEngine[DT, T]
+	StandardEngine[DT]
 	g *exprgraph.Graph
 }
 
@@ -134,12 +134,12 @@ func Example_forward_differentiation_engine() {
 	x := exprgraph.New[float64](g, "x", tensor.WithShape(2, 3), tensor.WithBacking([]float64{1, 2, 3, 4, 5, 6}))
 	y := exprgraph.New[float64](g, "y", tensor.WithShape(3, 2), tensor.WithBacking([]float64{6, 5, 4, 3, 2, 1}))
 	z := exprgraph.New[float64](g, "z", tensor.WithShape(), tensor.WithBacking([]float64{1}))
-	xy, err := MatMul[float64, tensor.Basic[float64]](x, y)
+	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	xypz, err := Add[float64, tensor.Basic[float64]](xy, z)
+	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Println(err)
 		return

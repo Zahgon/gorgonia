@@ -5,11 +5,10 @@ import (
 	"gorgonia.org/gorgonia/exprgraph"
 	gtu "gorgonia.org/gorgonia/internal/tensorutils"
 	stdops "gorgonia.org/gorgonia/ops/std"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/tensor"
 )
 
-func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
+func MatMul[DT tensor.Num](a, b Tensor) (retVal Tensor, err error) {
 	eng, ok := a.Engine().(engines.Hybrid)
 	if !ok {
 		eng, ok = b.Engine().(engines.Hybrid)
@@ -40,18 +39,19 @@ func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err 
 	// do the values stuff
 	at := exprgraph.T2B[DT](a)
 	bt := exprgraph.T2B[DT](b)
-	var ct tensor.Basic[DT]
+	aok, bok = at != nil, bt != nil
 
+	var ct tensor.Basic[DT]
 	switch {
 	case aok && bok && retVal != nil:
 		// both a and b  are values, so we can "materialize" c
-		rv := exprgraph.SymToVal[DT, T](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
+		rv := exprgraph.SymToVal[DT, tensor.Basic[DT]](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
 		retVal = rv
 		ct = rv.Value()
 	case aok && bok && retVal == nil:
 		// we'd have to create one ourselves
 		shp := tensor.Shape{a.Shape()[0], b.Shape()[1]}
-		ct = any(ct).(tensor.Aliker[T]).Alike(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		return retVal, nil

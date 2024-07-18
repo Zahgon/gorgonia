@@ -29,11 +29,11 @@ func Example_symbolicEngine() {
 	y := exprgraph.New[float64](g, "y", tensor.WithShape(3, 2), tensor.WithBacking([]float64{6, 5, 4, 3, 2, 1}))
 	z := exprgraph.New[float64](g, "z", tensor.WithShape())
 
-	xy, err := MatMul[float64, *dense.Dense[float64]](x, y)
+	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Println(err)
 	}
-	xypz, err := Add[float64, *dense.Dense[float64]](xy, z)
+	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -65,13 +65,13 @@ func Example_symbolicEngineUsingTensorAPI() {
 	y := dense.New[float64](tensor.WithEngine(g), tensor.WithShape(3, 2), tensor.WithBacking([]float64{6, 5, 4, 3, 2, 1})) // 1
 	z := dense.New[float64](tensor.WithEngine(g), tensor.WithShape(), tensor.WithBacking([]float64{1}))                    // 3
 
-	xy, err := MatMul[float64, *dense.Dense[float64]](x, y) // 2
+	xy, err := MatMul[float64](x, y) // 2
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	xypz, err := Add[float64, *dense.Dense[float64]](xy, z) // 4
+	xypz, err := Add[float64](xy, z) // 4
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -11,19 +11,19 @@ import (
 
 // HybridEngine creates symbolic nodes and also performs the operations immediately.
 // However when it encounters a Symbolic node, the remaining operations are symbolic only.
-type HybridEngine[DT tensor.Num, T tensor.Basic[DT]] struct {
-	StandardEngine[DT, T]
+type HybridEngine[DT tensor.Num] struct {
+	StandardEngine[DT]
 	g *exprgraph.Graph
 }
 
-func (e *HybridEngine[DT, T]) Graph() *exprgraph.Graph { return e.g }
+func (e *HybridEngine[DT]) Graph() *exprgraph.Graph { return e.g }
 
-func (e *HybridEngine[DT, T]) SetGraph(g *exprgraph.Graph) { e.g = g }
+func (e *HybridEngine[DT]) SetGraph(g *exprgraph.Graph) { e.g = g }
 
 // HybridEngine creates symbolic nodes and also performs the operations immediately.
 // However when it encounters a Symbolic node, the remaining operations are symbolic only.
 func Example_hybridEngine1() {
-	engine := &HybridEngine[float64, *dense.Dense[float64]]{StandardEngine: dense.StdFloat64Engine[*dense.Dense[float64]]{}}
+	engine := &HybridEngine[float64]{StandardEngine: dense.StdFloat64Engine[*dense.Dense[float64]]{}}
 	g := exprgraph.NewGraph(engine)
 	engine.g = g
 
@@ -31,12 +31,12 @@ func Example_hybridEngine1() {
 	y := exprgraph.New[float64](g, "y", tensor.WithShape(3, 2), tensor.WithBacking([]float64{6, 5, 4, 3, 2, 1}))
 	z := exprgraph.New[float64](g, "z", tensor.WithShape(), tensor.WithBacking([]float64{1}))
 
-	xy, err := MatMul[float64, *dense.Dense[float64]](x, y)
+	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	xypz, err := Add[float64, *dense.Dense[float64]](xy, z)
+	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -74,7 +74,7 @@ func Example_hybridEngine1() {
 }
 
 func Example_hybridEngine_mixmatch() {
-	engine := &HybridEngine[float64, *dense.Dense[float64]]{StandardEngine: dense.StdFloat64Engine[*dense.Dense[float64]]{}}
+	engine := &HybridEngine[float64]{StandardEngine: dense.StdFloat64Engine[*dense.Dense[float64]]{}}
 	g := exprgraph.NewGraph(engine)
 	engine.g = g
 
@@ -87,12 +87,12 @@ func Example_hybridEngine_mixmatch() {
 		return
 	}
 
-	xy, err := MatMul[float64, *dense.Dense[float64]](x, y)
+	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	xypz, err := Add[float64, *dense.Dense[float64]](xy, z)
+	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Println(err)
 	}

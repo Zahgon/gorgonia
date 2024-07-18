@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/exprgraph"
 	"gorgonia.org/gorgonia/ops"
 	"gorgonia.org/gorgonia/values/dual"
@@ -14,24 +13,24 @@ import (
 )
 
 var (
-	_ tensor.BLA[float64, *dense.Dense[float64]] = &BwdEngine[float64, *dense.Dense[float64]]{}
+	_ tensor.BLA[float64] = &BwdEngine[float64, *dense.Dense[float64]]{}
 )
 
-type adInstr[DT any, T tensor.Tensor[DT, T]] struct {
-	ADOp[DT, T]
+type adInstr[DT any] struct {
+	ADOp[DT]
 
-	inputs []gorgonia.Tensor
-	output gorgonia.Tensor
+	inputs []tensor.Basic[DT]
+	output tensor.Basic[DT]
 }
 
-func (ad adInstr[DT, T]) do(ctx context.Context) error { return ad.DoDiff(ctx, ad.inputs, ad.output) }
+func (ad adInstr[DT]) do(ctx context.Context) error { return ad.DoDiff(ctx, ad.inputs, ad.output) }
 
 // BwdEngine is an Engine that performs backwards mode diffentiation.
 type BwdEngine[DT tensor.Num, T tensor.Tensor[DT, T]] struct {
-	StandardEngine[DT, T]
+	StandardEngine[DT]
 	g *exprgraph.Graph
 
-	q []adInstr[DT, T]
+	q []adInstr[DT]
 }
 
 func (e *BwdEngine[DT, T]) Workhorse() tensor.Engine { return e.StandardEngine }
@@ -50,13 +49,13 @@ func (e *BwdEngine[DT, T]) Lift(a exprgraph.Tensor) exprgraph.Tensor {
 	panic("Unreachable")
 }
 
-func (e *BwdEngine[DT, T]) Q(op ops.Op[DT, T], inputs []gorgonia.Tensor, output gorgonia.Tensor) error {
-	var ad ADOp[DT, T]
+func (e *BwdEngine[DT, T]) Q(op ops.Op[DT], inputs []tensor.Basic[DT], output tensor.Basic[DT]) error {
+	var ad ADOp[DT]
 	var ok bool
-	if ad, ok = op.(ADOp[DT, T]); !ok {
+	if ad, ok = op.(ADOp[DT]); !ok {
 		return errors.Errorf("Expected %v to be an ADOp", op)
 	}
-	e.q = append(e.q, adInstr[DT, T]{ad, inputs, output})
+	e.q = append(e.q, adInstr[DT]{ad, inputs, output})
 	return nil
 }
 
@@ -78,13 +77,13 @@ func Example_backward_differentiation_engine() {
 	x := exprgraph.New[float64](g, "x", tensor.WithShape(2, 3), tensor.WithBacking([]float64{1, 2, 3, 4, 5, 6}))
 	y := exprgraph.New[float64](g, "y", tensor.WithShape(3, 2), tensor.WithBacking([]float64{6, 5, 4, 3, 2, 1}))
 	z := exprgraph.New[float64](g, "z", tensor.WithShape(), tensor.WithBacking([]float64{1}))
-	xy, err := MatMul[float64, *dense.Dense[float64]](x, y)
+	xy, err := MatMul[float64](x, y)
 	if err != nil {
 		fmt.Printf("Matmul failed: Err: %v\n", err)
 		return
 	}
 
-	xypz, err := Add[float64, *dense.Dense[float64]](xy, z)
+	xypz, err := Add[float64](xy, z)
 	if err != nil {
 		fmt.Printf("Add failed. Err: %v\n", err)
 		return
