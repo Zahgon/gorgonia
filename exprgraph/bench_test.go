@@ -3,6 +3,7 @@ package exprgraph_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 	"testing"
@@ -44,6 +45,7 @@ func shortExpr[DT tensor.Num, T values.Value[DT]](g *exprgraph.Graph, x gorgonia
 	z := exprgraph.New[DT](g, rndName(), tensor.WithShape(), tensor.WithBacking([]float64{0}))
 	xy, err := MatMul[DT](x, y)
 	if err != nil {
+		log.Printf("matmul in shortexpr failed %v", err)
 		return nil, err
 	}
 	return Add[DT](xy, z)
@@ -52,10 +54,12 @@ func shortExpr[DT tensor.Num, T values.Value[DT]](g *exprgraph.Graph, x gorgonia
 func longExpr[DT tensor.Num, T values.Value[DT]](g *exprgraph.Graph, n int) (gorgonia.Tensor, error) {
 	expr, err := shortExpr[DT, T](g, nil)
 	if err != nil {
+		log.Printf("add failed? %v", err)
 		return nil, err
 	}
 	for i := 1; i < n; i++ {
 		if expr, err = shortExpr[DT, T](g, expr); err != nil {
+			log.Printf("n %d", n)
 			return nil, err
 		}
 	}

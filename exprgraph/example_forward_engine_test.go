@@ -118,6 +118,13 @@ func (e *FwdEngine[DT, T]) AddScalar(ctx context.Context, a tensor.Basic[DT], b 
 }
 
 func (e *FwdEngine[DT, T]) AddBroadcastable(ctx context.Context, a, b, retVal tensor.Basic[DT], expAPA, expAPB *tensor.AP, toIncr bool) (err error) {
+	switch {
+	case expAPA.Shape().IsScalarEquiv() && !expAPB.Shape().IsScalarEquiv():
+		return e.AddScalar(ctx, b, a.Data()[0], retVal, false, toIncr)
+	case !expAPA.Shape().IsScalarEquiv() && expAPB.Shape().IsScalarEquiv():
+		return e.AddScalar(ctx, a, b.Data()[0], retVal, true, toIncr)
+	}
+
 	return errors.New("NYI")
 }
 

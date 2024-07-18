@@ -304,6 +304,7 @@ func (op add[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs 
 		return mm.AddScalar(b.Data()[0], true, tensor.WithReuse(prealloc))
 	default:
 		var ret tensor.Basic[DT]
+
 		if ret, err = tensor.Add[DT](a, b, tensor.WithReuse(prealloc)); err != nil {
 			return retVal, err
 		}
@@ -362,12 +363,12 @@ func Add[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error
 		// construct node
 		if anode == nil {
 			if anode = g.NodeOf(a); anode == nil {
-				return nil, errors.Errorf("MatMul: Cannot find Node a of %v", a)
+				return nil, errors.Errorf("Add: Cannot find Node a of %v", a)
 			}
 		}
 		if bnode == nil {
 			if bnode = g.NodeOf(b); bnode == nil {
-				return nil, errors.Errorf("MatMul: Cannot find Node b of %v", b)
+				return nil, errors.Errorf("Add: Cannot find Node b of %v", b)
 			}
 		}
 
@@ -390,7 +391,6 @@ func Add[DT tensor.Num](a, b gorgonia.Tensor) (retVal gorgonia.Tensor, err error
 			return
 		}
 	default:
-
 	}
 	// do the values stuff'
 	at := exprgraph.T2B[DT](a)
