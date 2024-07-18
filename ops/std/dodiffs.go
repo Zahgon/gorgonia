@@ -3,9 +3,7 @@ package stdops
 import (
 	"context"
 
-	"gorgonia.org/gorgonia/exprgraph"
 	"gorgonia.org/gorgonia/internal/datatypes"
-	"gorgonia.org/gorgonia/values/dual"
 )
 
 // DoDiff is the method that allows automatic differentiation of `add`.

@@ -16,7 +16,7 @@ func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err 
 	}
 	ctx := gtu.CtxFromEngines(a.Engine(), b.Engine())
 
-	op := stdops.MatMul[DT, T]{}
+	op := stdops.MatMul[DT]{}
 	if ok {
 		// do symbolic stuff
 		if retVal, err = binopSymbolic[DT](op, eng, a, b); err != nil {
@@ -25,12 +25,12 @@ func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err 
 	}
 
 	// check if engine supports MatMul. If not, return
-	_, aok := a.Engine().Workhorse().(tensor.BLA[DT, T])
-	_, bok := b.Engine().Workhorse().(tensor.BLA[DT, T])
+	_, aok := a.Engine().Workhorse().(tensor.BLA[DT])
+	_, bok := b.Engine().Workhorse().(tensor.BLA[DT])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().BasicEng().(tensor.BLA[DT, T])
-		_, bok = b.Engine().Workhorse().BasicEng().(tensor.BLA[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.BLA[DT])
+		_, bok = b.Engine().Workhorse().(tensor.BLA[DT])
 		if !aok && !bok {
 			return
 		}
@@ -38,9 +38,9 @@ func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err 
 
 	}
 	// do the values stuff
-	at, aok := exprgraph.T2T[DT, T](a)
-	bt, bok := exprgraph.T2T[DT, T](b)
-	var ct T
+	at := exprgraph.T2B[DT](a)
+	bt := exprgraph.T2B[DT](b)
+	var ct tensor.Basic[DT]
 
 	switch {
 	case aok && bok && retVal != nil:
@@ -66,10 +66,10 @@ func MatMul[DT tensor.Num, T values.Value[DT]](a, b Tensor) (retVal Tensor, err 
 
 	// check if engine is backwards (i.e. requires a queue)
 	// if not, return.
-	var q engines.Queueer[DT, T]
-	q, ok = a.Engine().Workhorse().(engines.Queueer[DT, T])
+	var q engines.Queueer[DT]
+	q, ok = a.Engine().Workhorse().(engines.Queueer[DT])
 	if !ok {
-		q, ok = b.Engine().Workhorse().(engines.Queueer[DT, T])
+		q, ok = b.Engine().Workhorse().(engines.Queueer[DT])
 	}
 	if q != nil {
 		// do queue stuff here

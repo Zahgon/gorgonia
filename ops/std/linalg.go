@@ -10,7 +10,6 @@ import (
 	"gorgonia.org/gorgonia/internal/datatypes"
 	"gorgonia.org/gorgonia/internal/errors"
 	"gorgonia.org/gorgonia/types"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/gorgonia/values/dual"
 	"gorgonia.org/shapes"
 	"gorgonia.org/tensor"
@@ -96,29 +95,29 @@ func (op MatMul[DT]) SymDiff(g *exprgraph.Graph, inputs []*exprgraph.Node, outpu
 
 // DoDiff allows automatic differentiation for `MatMul`.
 func (op MatMul[DT]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) (err error) {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT])
-	cdv := exprgraph.T2B[DT](output).(*dual.Dual[DT])
+	adv := exprgraph.T2B[DT](inputs[0]).(dual.Value[DT])
+	bdv := exprgraph.T2B[DT](inputs[1]).(dual.Value[DT])
+	cdv := exprgraph.T2B[DT](output).(dual.Value[DT])
 
-	advd := adv.Deriv()
-	bdvd := bdv.Deriv()
+	advd := adv.DVal()
+	bdvd := bdv.DVal()
 
 	// temporary transpose
-	var advT, bdvT T
-	if bdvT, err = bdv.V().(tensor.Operable[T]).T(); err != nil {
+	var advT, bdvT tensor.Basic[DT]
+	if bdvT, err = bdv.Val().(tensor.BasicOperable[DT]).TAsBasic(); err != nil {
 		return err
 	}
-	if advT, err = adv.V().(tensor.Operable[T]).T(); err != nil {
+	if advT, err = adv.Val().(tensor.BasicOperable[DT]).TAsBasic(); err != nil {
 		return err
 	}
 
 	// dA = C×B'
-	if _, err := op.PreallocDo(ctx, advd, cdv.Value(), bdvT); err != nil {
+	if _, err := op.PreallocDo(ctx, advd, cdv.Val(), bdvT); err != nil {
 		return err
 	}
 
 	// dB = A'×C
-	if _, err := op.PreallocDo(ctx, bdvd, advT, cdv.Value()); err != nil {
+	if _, err := op.PreallocDo(ctx, bdvd, advT, cdv.Val()); err != nil {
 		return err
 	}
 	return nil
@@ -173,11 +172,9 @@ func (op MatVecMul[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT])
 	}
 	expShape := elimInnermostOutermost(a.Shape(), b.Shape())
 
-	var ret tensor.Basic[DT]
-	if ret, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
+	if retVal, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())
 	}
-	retVal = ret.(T)
 
 	var bla tensor.BLA[DT]
 	if bla, ok = e.(tensor.BLA[DT]); !ok {
@@ -334,7 +331,6 @@ func (op Outer[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[DT]) (re
 		return retVal, errors.Errorf(errors.EngineSupport, e, prepper, errors.ThisFn())
 	}
 
-	var ret tensor.Basic[DT]
 	expShape := shapes.Shape{a.Shape().TotalSize(), b.Shape().TotalSize()}
 	if retVal, _, err = prepper.HandleFuncOpts(a, expShape, tensor.WithReuse(prealloc)); err != nil {
 		return retVal, errors.Wrapf(err, errors.FailedFuncOpt, errors.ThisFn())

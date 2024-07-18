@@ -8,9 +8,11 @@ import (
 	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/shapes"
 	"gorgonia.org/tensor"
+	"gorgonia.org/tensor/dense"
 )
 
-//var _ datatypes.Tensor[float64] = &Dual[float64]{}
+// var _ datatypes.Tensor[float64] = &Dual[float64]{}
+var _ tensor.Basic[float64] = &Dual[float64, *dense.Dense[float64]]{}
 
 // Op is a function that takes an arbitrary number of Values and returns a Value
 type Op[DT any, T tensor.Basic[DT]] func(vals ...T) (T, error)
@@ -140,6 +142,10 @@ func (dv *Dual[DT, T]) Format(s fmt.State, c rune) {
 	}
 
 	fmt.Fprintf(s, "%v", dv.Basic)
+}
+
+func (dv *Dual[DT, T]) AlikeAsBasic(opts ...tensor.ConsOpt) tensor.Basic[DT] {
+	return dv.Alike(opts...)
 }
 
 /*

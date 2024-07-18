@@ -133,18 +133,18 @@ func (op Repeat[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (re
 
 // Slice _{Slices} :: Tensor → a
 // The list of slices are parameterized
-type Slice[DT any, T values.Value[DT]] struct {
+type Slice[DT any] struct {
 	Slices shapes.Slices
 }
 
-func (op Slice[DT, T]) Arity() int { return 1 }
-func (op Slice[DT, T]) Type() hm.Type {
+func (op Slice[DT]) Arity() int { return 1 }
+func (op Slice[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	r := &types.Sliced{Of: a, Along: op.Slices}
 	return hm.NewFnType(a, r)
 }
 
-func (op Slice[DT, T]) ShapeExpr() shapes.Expr {
+func (op Slice[DT]) ShapeExpr() shapes.Expr {
 	a := shapes.Var('a')
 	r := shapes.SliceOf{
 		Slice: op.Slices,
@@ -153,39 +153,39 @@ func (op Slice[DT, T]) ShapeExpr() shapes.Expr {
 	return shapes.MakeArrow(a, r)
 }
 
-func (op Slice[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op Slice[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
 
-	v := any(vs[0]).(tensor.Operable[T])
-	return v.Slice(op.Slices...)
+	v := any(vs[0]).(tensor.BasicOperable[DT])
+	return v.SliceAsBasic(op.Slices...)
 }
 
-func (op Slice[DT, T]) PreallocDo(ctx context.Context, prealloc T, vs ...T) (retVal T, err error) {
+func (op Slice[DT]) PreallocDo(ctx context.Context, prealloc tensor.Basic[DT], vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
 	v := vs[0]
-	if s, ok := any(v).(tensor.SlicerInto[T]); ok {
-		err = s.SliceInto(prealloc, op.Slices...)
+	if s, ok := any(v).(tensor.BasicSlicerInto[DT]); ok {
+		err = s.SliceIntoBasic(prealloc, op.Slices...)
 		return prealloc, err
 	}
 	return retVal, errors.Errorf("NYI: preallocdo")
 }
 
-func (op Slice[DT, T]) String() string            { return fmt.Sprintf("%v", op.Slices) }
-func (op Slice[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op Slice[DT]) String() string            { return fmt.Sprintf("%v", op.Slices) }
+func (op Slice[DT]) DiffWRT(inputs int) []bool { return onetrue }
 
-type sliceDiff[DT any, T values.Value[DT]] struct{ Slice[DT, T] }
+type sliceDiff[DT any] struct{ Slice[DT] }
 
-func (op sliceDiff[DT, T]) Arity() int { return 2 }
-func (op sliceDiff[DT, T]) Type() hm.Type {
+func (op sliceDiff[DT]) Arity() int { return 2 }
+func (op sliceDiff[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	b := hm.TypeVariable('b')
 	return hm.NewFnType(a, b, a)
 }
-func (op sliceDiff[DT, T]) ShapeExpr() shapes.Expr {
+func (op sliceDiff[DT]) ShapeExpr() shapes.Expr {
 	a := shapes.Var('a')
 	r := shapes.SliceOf{
 		Slice: op.Slices,
@@ -194,7 +194,7 @@ func (op sliceDiff[DT, T]) ShapeExpr() shapes.Expr {
 	return shapes.MakeArrow(a, r, a)
 }
 
-func (op sliceDiff[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op sliceDiff[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
@@ -212,39 +212,39 @@ func (op sliceDiff[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error
 		if _, err = v.Add(outGrad, tensor.UseUnsafe); err != nil {
 			return retVal, err
 		}
-		retVal = any(grad).(T)
+		retVal = grad
 		return
 	default:
 		return retVal, errors.Errorf("NYI %T", t)
 	}
 }
-func (op sliceDiff[DT, T]) String() string { return fmt.Sprintf("∂%v", op.Slices) }
+func (op sliceDiff[DT]) String() string { return fmt.Sprintf("∂%v", op.Slices) }
 
 type Concat[DT any, T values.Value[DT]] struct{}
 
 // Reshape is an Op representing a reshape operation.
-type Reshape[DT any, T values.Value[DT]] struct {
+type Reshape[DT any] struct {
 	To shapes.Shape
 }
 
-func (op *Reshape[DT, T]) Arity() int { return 1 }
-func (op *Reshape[DT, T]) Type() hm.Type {
+func (op *Reshape[DT]) Arity() int { return 1 }
+func (op *Reshape[DT]) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	t := types.MakeTensorType(op.To.Dims(), types.Ptr) // here we use types.Ptr but because we are using types.Dependent, the resulting type only cares about the dims of `t`, not the `t.Of`
 	return hm.NewFnType(a, types.MakeDependent(t, a))
 }
-func (op *Reshape[DT, T]) ShapeExpr() shapes.Expr { return shapes.MakeArrow(shapes.Var('a'), op.To) } // TODO: take advantage of shapes library's checking options
+func (op *Reshape[DT]) ShapeExpr() shapes.Expr { return shapes.MakeArrow(shapes.Var('a'), op.To) } // TODO: take advantage of shapes library's checking options
 
-func (op *Reshape[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error) {
+func (op *Reshape[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tensor.Basic[DT], err error) {
 	if err := internal.HandleCtx(ctx); err != nil {
 		return retVal, err
 	}
 	a := vs[0]
-	cloner, ok := any(a).(tensor.ShallowCloner[T])
+	cloner, ok := any(a).(tensor.BasicShallowCloner[DT])
 	if !ok {
 		return retVal, errors.Errorf("Cannot ShallowClone in order to reshape")
 	}
-	v := cloner.ShallowClone()
+	v := cloner.ShallowCloneAsBasic()
 
 	//v := values.ShallowClone(any(vs[0]).(tensor.ShallowCloner[T]))
 
@@ -255,6 +255,6 @@ func (op *Reshape[DT, T]) Do(ctx context.Context, vs ...T) (retVal T, err error)
 
 }
 
-func (op *Reshape[DT, T]) String() string { return fmt.Sprintf("ReshapeTo %v", op.To) }
+func (op *Reshape[DT]) String() string { return fmt.Sprintf("ReshapeTo %v", op.To) }
 
-func (op *Reshape[DT, T]) DiffWRT(inputs int) []bool { return onetrue }
+func (op *Reshape[DT]) DiffWRT(inputs int) []bool { return onetrue }

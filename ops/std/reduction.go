@@ -14,7 +14,6 @@ import (
 
 	"gorgonia.org/gorgonia/ops"
 	"gorgonia.org/gorgonia/types"
-	"gorgonia.org/gorgonia/values"
 	"gorgonia.org/shapes"
 )
 
@@ -96,12 +95,10 @@ func (op *Sum[DT]) Do(ctx context.Context, vs ...tensor.Basic[DT]) (retVal tenso
 	switch t := any(vs[0]).(type) {
 	case *dense.Dense[DT]:
 		ctx2, task := trace.NewTask(ctx, op.String())
-		var ret any
-		ret, err = denseReduction(task, ctx2, dense.Sum[DT], axesToInts(op.along), t)
+		retVal, err = denseReduction(task, ctx2, dense.Sum[DT], axesToInts(op.along), t)
 		if err != nil {
 			return retVal, err
 		}
-		retVal = ret.(T)
 		return
 	default:
 		return retVal, errors.NYI(t)

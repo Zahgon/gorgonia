@@ -8,7 +8,6 @@ import (
 	gtu "gorgonia.org/gorgonia/internal/tensorutils"
 	"gorgonia.org/gorgonia/ops"
 	stdops "gorgonia.org/gorgonia/ops/std"
-	"gorgonia.org/gorgonia/values"
 
 	"gorgonia.org/tensor"
 )
@@ -52,7 +51,7 @@ func binopSymbolic[DT any](op ops.Desc, eng engines.Hybrid, a, b Tensor) (retVal
 	return
 }
 
-func Add[DT any, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
+func Add[DT any](a, b Tensor) (retVal Tensor, err error) {
 	// We check to see if the engines are Hybrid engine (i.e. they have graphs)
 	eng, ok := a.Engine().(engines.Hybrid)
 	if !ok {
@@ -60,7 +59,7 @@ func Add[DT any, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
 	}
 	ctx := gtu.CtxFromEngines(a.Engine(), b.Engine())
 
-	op := stdops.Add[DT, T](a, b)
+	op := stdops.Add[DT](a, b)
 	if ok {
 		// do symbolic stuff
 		if retVal, err = binopSymbolic[DT](op, eng, a, b); err != nil {
@@ -69,12 +68,12 @@ func Add[DT any, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
 	}
 
 	// check if engine supports Add. If not, return
-	_, aok := a.Engine().Workhorse().(tensor.Adder[DT, T])
-	_, bok := b.Engine().Workhorse().(tensor.Adder[DT, T])
+	_, aok := a.Engine().Workhorse().(tensor.Adder[DT])
+	_, bok := b.Engine().Workhorse().(tensor.Adder[DT])
 	switch {
 	case !aok && !bok:
-		_, aok = a.Engine().Workhorse().BasicEng().(tensor.Adder[DT, T])
-		_, bok = b.Engine().Workhorse().BasicEng().(tensor.Adder[DT, T])
+		_, aok = a.Engine().Workhorse().(tensor.Adder[DT])
+		_, bok = b.Engine().Workhorse().(tensor.Adder[DT])
 		if !aok && !bok {
 			return
 		}
@@ -82,20 +81,20 @@ func Add[DT any, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
 
 	}
 	// do the values stuff'
-	at, aok := exprgraph.T2T[DT, T](a)
-	bt, bok := exprgraph.T2T[DT, T](b)
-	var ct T
+	at := exprgraph.T2B[DT](a)
+	bt := exprgraph.T2B[DT](b)
+	var ct tensor.Basic[DT]
 	switch {
 	case aok && bok && retVal != nil:
 		// both a and b  are values, so we can "materialize" c
-		rv := exprgraph.SymToVal[DT, T](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
+		rv := exprgraph.SymToVal[DT, tensor.Basic[DT]](retVal.(*exprgraph.Symbolic[DT])) // turn a Symbolic into a Value
 		retVal = rv
 		ct = rv.Value()
 	case aok && bok && retVal == nil:
 		// we'd have to create one ourselves
 		// NOTICE: This example assumes that `Add` adds a matrix to a scalar.
 		shp := a.Shape()
-		ct = any(ct).(tensor.Aliker[T]).Alike(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
+		ct = any(ct).(tensor.BasicAliker[DT]).AlikeAsBasic(tensor.WithEngine(a.Engine()), tensor.WithShape(shp...))
 	default:
 		// one of a or b is not a value tensor
 		return retVal, nil
@@ -109,10 +108,10 @@ func Add[DT any, T values.Value[DT]](a, b Tensor) (retVal Tensor, err error) {
 
 	// check if engine is backwards (i.e. requires a queue)
 	// if not, return.
-	var q engines.Queueer[DT, T]
-	q, ok = a.Engine().Workhorse().(engines.Queueer[DT, T])
+	var q engines.Queueer[DT]
+	q, ok = a.Engine().Workhorse().(engines.Queueer[DT])
 	if !ok {
-		q, ok = b.Engine().Workhorse().(engines.Queueer[DT, T])
+		q, ok = b.Engine().Workhorse().(engines.Queueer[DT])
 	}
 	if ok && q != nil {
 		// do queue stuff here

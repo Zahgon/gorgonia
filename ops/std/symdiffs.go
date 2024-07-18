@@ -33,14 +33,14 @@ func setGroup(g *exprgraph.Graph, group encoding.Group, inputs ...exprgraph.Node
 }
 
 // SymDiff performs the symbolic differentiation of add.
-func (op addOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+func (op addOp[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
 	g.SetGroup(grad, encoding.GradientCluster)
 	return []exprgraph.Node{grad, grad}, nil
 }
 
 // SymDiff performs the symbolic differentiation of sub.
-func (op subOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
-	neg := negOp[DT, T]{}
+func (op subOp[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+	neg := negOp[DT]{}
 	y := inputs[1]
 	dzdy, err := apply[DT](g, neg, grN(y), grad)
 	if err != nil {
@@ -51,15 +51,15 @@ func (op subOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, outp
 }
 
 // SymDiff performs the symbolic differentiation of mul.
-func (op mulOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+func (op mulOp[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
 	x := inputs[0]
 	y := inputs[1]
 
-	dzdx, err := apply[DT](g, Mul[DT, T](grad, y), grN(x), grad, y)
+	dzdx, err := apply[DT](g, Mul[DT](grad, y), grN(x), grad, y)
 	if err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(x))
 	}
-	dzdy, err := apply[DT](g, Mul[DT, T](grad, x), grN(y), grad, x)
+	dzdy, err := apply[DT](g, Mul[DT](grad, x), grN(y), grad, x)
 	if err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(y))
 	}
@@ -68,24 +68,24 @@ func (op mulOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, outp
 }
 
 // SymDiff performs the symbolic differentiation of div.
-func (op divOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+func (op divOp[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output exprgraph.Node, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
 	x := inputs[0]
 	y := inputs[1]
 
 	var dzdx, dzdy exprgraph.Node
-	if dzdx, err = apply[DT](g, Div[DT, T](grad, y), grN(x), grad, y); err != nil {
+	if dzdx, err = apply[DT](g, Div[DT](grad, y), grN(x), grad, y); err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(x))
 	}
 
-	if dzdy, err = apply[DT](g, Div[DT, T](output, y), "", output, y); err != nil {
+	if dzdy, err = apply[DT](g, Div[DT](output, y), "", output, y); err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, "output/y")
 	}
 	g.SetGroup(dzdy, encoding.GradientCluster)
-	if dzdy, err = apply[DT](g, negOp[DT, T]{}, "", dzdy); err != nil {
+	if dzdy, err = apply[DT](g, negOp[DT]{}, "", dzdy); err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, "-(output/y)")
 	}
 	g.SetGroup(dzdy, encoding.GradientCluster)
-	if dzdy, err = apply[DT](g, Mul[DT, T](dzdy, grad), grN(y), grad, y); err != nil {
+	if dzdy, err = apply[DT](g, Mul[DT](dzdy, grad), grN(y), grad, y); err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(y))
 	}
 	g.SetGroup(dzdy, encoding.GradientCluster)
@@ -95,9 +95,9 @@ func (op divOp[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, outp
 /* TENSOR FUNCTION SYMDIFFS */
 
 // SymDiff performs the symbolic differentiation of Reshape
-func (op *Reshape[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+func (op *Reshape[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
 	x := inputs[0]
-	op2 := &Reshape[DT, T]{To: x.Shape().Clone()}
+	op2 := &Reshape[DT]{To: x.Shape().Clone()}
 	dydx, err := apply[DT](g, op2, grN(x), grad)
 	if err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(x))
@@ -107,9 +107,9 @@ func (op *Reshape[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, o
 }
 
 // SymDiff performs the symbolic differentiation of Reshape
-func (op Slice[DT, T]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
+func (op Slice[DT]) SymDiff(g *exprgraph.Graph, inputs []exprgraph.Node, output, grad exprgraph.Node) (retVal []exprgraph.Node, err error) {
 	x := inputs[0]
-	op2 := sliceDiff[DT, T]{op}
+	op2 := sliceDiff[DT]{op}
 	dydx, err := apply[DT](g, op2, grN(x), grad)
 	if err != nil {
 		return nil, errors.Wrapf(err, symdiffErr, op, grN(x))

@@ -14,9 +14,9 @@ type contexter interface {
 }
 
 // GetDenseTensor tries to extract a tensor.DenseTensor from a tensor.Tensor.
-func GetDenseTensor[DT any, T tensor.Tensor[DT, T]](t tensor.DescWithStorage) (dense.DenseTensor[DT, T], error) {
+func GetDenseTensor[DT any, T tensor.Tensor[DT, T]](t tensor.DescWithStorage) (dense.FullDenseTensor[DT, T], error) {
 	switch tt := t.(type) {
-	case dense.DenseTensor[DT, T]:
+	case dense.FullDenseTensor[DT, T]:
 		return tt, nil
 	// case dense.Densor[DT]:
 	// 	var z T
