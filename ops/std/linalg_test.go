@@ -14,7 +14,7 @@ import (
 
 func TestMatMul(t *testing.T) {
 	assert := assert.New(t)
-	op := MatMul[float64, *dense.Dense[float64]]{}
+	op := MatMul[float64]{}
 
 	// basic test
 	assert.Equal(2, op.Arity())
@@ -22,7 +22,7 @@ func TestMatMul(t *testing.T) {
 	/* Do */
 
 	// set up
-	var a, b, c, d *dense.Dense[float64]
+	var a, b, c, d tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -60,7 +60,7 @@ func TestMatMul(t *testing.T) {
 
 func TestMatVecMul(t *testing.T) {
 	assert := assert.New(t)
-	op := MatVecMul[float64, *dense.Dense[float64]]{}
+	op := MatVecMul[float64]{}
 
 	// basic test
 	assert.Equal(2, op.Arity())
@@ -68,7 +68,7 @@ func TestMatVecMul(t *testing.T) {
 	/* Do */
 
 	// set up
-	var a, b, c, d *dense.Dense[float64]
+	var a, b, c, d tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -106,7 +106,7 @@ func TestMatVecMul(t *testing.T) {
 
 func TestInner(t *testing.T) {
 	assert := assert.New(t)
-	op := Inner[float64, *dense.Dense[float64]]{}
+	op := Inner[float64]{}
 
 	// basic test
 	assert.Equal(2, op.Arity())
@@ -114,7 +114,7 @@ func TestInner(t *testing.T) {
 	/* Do */
 
 	// set up
-	var a, b, c, d *dense.Dense[float64]
+	var a, b, c, d tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -154,7 +154,7 @@ func TestInner(t *testing.T) {
 
 func TestOuter(t *testing.T) {
 	assert := assert.New(t)
-	op := Outer[float64, *dense.Dense[float64]]{}
+	op := Outer[float64]{}
 
 	// basic test
 	assert.Equal(2, op.Arity())
@@ -162,7 +162,7 @@ func TestOuter(t *testing.T) {
 	/* Do */
 
 	// set up
-	var a, b, c, d *dense.Dense[float64]
+	var a, b, c, d tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
