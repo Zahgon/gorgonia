@@ -47,13 +47,13 @@ func TestAt(t *testing.T) {
 }
 
 func TestSlice(t *testing.T) {
-	op := &Slice[float64, *dense.Dense[float64]]{Slices: shapes.Slices{shapes.S(1, 2), shapes.S(0, 2)}}
+	op := &Slice[float64]{Slices: shapes.Slices{shapes.S(1, 2), shapes.S(0, 2)}}
 
 	// basic test
 	assert.Equal(t, 1, op.Arity())
 
 	// set up
-	var a, b *dense.Dense[float64]
+	var a, b tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -155,13 +155,13 @@ func TestSize(t *testing.T) {
 }
 
 func TestReshape(t *testing.T) {
-	op := &Reshape[float64, *dense.Dense[float64]]{To: shapes.Shape{2, 3}}
+	op := &Reshape[float64]{To: shapes.Shape{2, 3}}
 
 	// basic test
 	assert.Equal(t, 1, op.Arity())
 
 	// set up
-	var a, b *dense.Dense[float64]
+	var a, b tensor.Basic[float64]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error

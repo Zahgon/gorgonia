@@ -61,14 +61,14 @@ var sumTests = []struct {
 }
 
 func TestSum(t *testing.T) {
-	op := &Sum[float64, *dense.Dense[float64]]{}
+	op := &Sum[float64]{}
 
 	// basic test
 	assert.Equal(t, 1, op.Arity())
 
 	for _, tc := range sumTests {
 		// set up
-		var a, b *dense.Dense[float64]
+		var a, b tensor.Basic[float64]
 		var expectedType hm.Type
 		var expectedShape shapes.Shape
 		var err error

@@ -17,13 +17,13 @@ var (
 )
 
 func TestAdd__(t *testing.T) {
-	op := addVV[float64, *dense.Dense[float64]]{}
+	op := addVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	// tensor-tensor / Do()
 
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 	a = dense.New[float64](tensor.WithShape(2, 3), tensor.WithBacking([]float64{1, 2, 3, 4, 5, 6}))
 	b = dense.New[float64](tensor.WithShape(2, 3), tensor.WithBacking([]float64{10, 20, 30, 40, 50, 60}))
 
@@ -81,10 +81,10 @@ func TestAdd__(t *testing.T) {
 }
 
 func TestAddVS__(t *testing.T) {
-	op := addVS[float64, *dense.Dense[float64]]{}
+	op := addVS[float64]{}
 
 	// Do
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 	a = dense.New[float64](tensor.WithShape(2, 3), tensor.WithBacking([]float64{1, 2, 3, 4, 5, 6}))
 	b = dense.New[float64](tensor.WithShape(), tensor.WithBacking([]float64{100}))
 
@@ -128,10 +128,10 @@ func TestAddVS__(t *testing.T) {
 }
 
 func TestAddSV__(t *testing.T) {
-	op := addSV[float64, *dense.Dense[float64]]{}
+	op := addSV[float64]{}
 
 	// Do
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 	a = dense.New[float64](tensor.WithShape(), tensor.WithBacking([]float64{100}))
 	b = dense.New[float64](tensor.WithShape(2, 3), tensor.WithBacking([]float64{1, 2, 3, 4, 5, 6}))
 
@@ -175,10 +175,10 @@ func TestAddSV__(t *testing.T) {
 }
 
 func TestAbs__(t *testing.T) {
-	op := Abs[float64, *dense.Dense[float64]]()
+	op := Abs[float64]()
 
 	// Do
-	var a, b *dense.Dense[float64]
+	var a, b tensor.Basic[float64]
 	a = dense.New[float64](tensor.WithShape(2, 3), tensor.WithBacking([]float64{-1, -2, -3, 4, 5, 6}))
 
 	var expectedType hm.Type
