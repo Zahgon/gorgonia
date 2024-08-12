@@ -15,14 +15,14 @@ import (
 )
 
 func Test_modVV(t *testing.T) {
-	op := modVV[float64, *dense.Dense[float64]]{}
+	op := modVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -86,14 +86,14 @@ func Test_modVV(t *testing.T) {
 }
 
 func Test_modVS(t *testing.T) {
-	op := modVS[float64, *dense.Dense[float64]]{}
+	op := modVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -144,14 +144,14 @@ func Test_modVS(t *testing.T) {
 }
 
 func Test_modSV(t *testing.T) {
-	op := modSV[float64, *dense.Dense[float64]]{}
+	op := modSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape

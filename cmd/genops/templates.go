@@ -394,15 +394,15 @@ const arithOpTestRaw = `{{ define "varExpected" }}
 {{ $SV = (printf "%vRS" $SV) }}
 {{- end -}}
 func Test_{{$VV}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
-	op := {{$VV}}[float64, *dense.Dense[float64]{{if and .IsCmp (not .IsCmpRetTrue)}}, *dense.Dense[bool]{{end}}]{  }
+	op := {{$VV}}[float64]{  }
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b {{if .IsCmpRetTrue}},c{{end}} *dense.Dense[float64]
-	{{if not .IsCmpRetTrue}}var c *dense.Dense[bool]{{end}}
+	var a, b {{if .IsCmpRetTrue}},c{{end}} tensor.Basic[float64]
+	{{if not .IsCmpRetTrue}}var c tensor.Basic[bool]{{end}}
 	{{- template "varExpected" }}
 	a = {{.AVV}}
 	b = {{.BVV}}
@@ -444,15 +444,15 @@ func Test_{{$VV}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
 }
 
 func Test_{{$VS}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
-	op := {{$VS}}[float64, *dense.Dense[float64]{{if and .IsCmp (not .IsCmpRetTrue)}}, *dense.Dense[bool]{{end}}]{  }
+	op := {{$VS}}[float64]{  }
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b {{if .IsCmpRetTrue}},c{{end}} *dense.Dense[float64]
-	{{if not .IsCmpRetTrue}}var c *dense.Dense[bool]{{end}}
+	var a, b {{if .IsCmpRetTrue}},c{{end}} tensor.Basic[float64]
+	{{if not .IsCmpRetTrue}}var c tensor.Basic[bool]{{end}}
 
 	{{- template "varExpected" }}
 	a = {{.AVS}}
@@ -486,15 +486,15 @@ func Test_{{$VS}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
 }
 
 func Test_{{$SV}}{{if and .IsCmp .IsCmpRetTrue}}_RetSame{{end}}(t *testing.T) {
-	op := {{$SV}}[float64, *dense.Dense[float64]{{if and .IsCmp (not .IsCmpRetTrue)}}, *dense.Dense[bool]{{end}}]{   }
+	op := {{$SV}}[float64]{   }
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b {{if .IsCmpRetTrue}},c{{end}} *dense.Dense[float64]
-	{{if not .IsCmpRetTrue}}var c *dense.Dense[bool]{{end}}
+	var a, b {{if .IsCmpRetTrue}},c{{end}} tensor.Basic[float64]
+	{{if not .IsCmpRetTrue}}var c tensor.Basic[bool]{{end}}
 
 	{{- template "varExpected" }}
 	a = {{.ASV}}
@@ -704,8 +704,8 @@ const binopAPITestRaw = `{{- $retSameFalse := "" -}}
 {{- $retSameTrue = ", true" -}}
 {{- $cmptrue = "retSame: true" -}}
 {{- $cmpfalse = "retSame: false" -}}
-{{- $cmpTypeParam = ", *dense.Dense[bool]" -}}
-{{- $cmpTypeParamRS = ", *dense.Dense[float64]" -}}
+{{- $cmpTypeParam = ", float64" -}}
+{{- $cmpTypeParamRS = ", bool" -}}
 {{- end -}}
 
 func Test{{.Name | title}}(t *testing.T){
@@ -716,57 +716,57 @@ func Test{{.Name | title}}(t *testing.T){
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2,3))
 	b := dense.New[float64](tensor.WithShape(2,3))
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParam}}](a, b)
-	expected = {{.Name}}VV[float64, *dense.Dense[float64] {{$cmpTypeParam}}]{}
+	op = {{.Name | title}}[float64 {{$cmpTypeParam}}](a, b)
+	expected = {{.Name}}VV[float64 ]{}
 	assert.Equal(op, expected)
 
 
 {{ if .IsCmp }}
 	// test vv but retSame = true
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParamRS}}](a, b)
-	expected = {{.Name}}VVRS[float64, *dense.Dense[float64]]{}
+	op = {{.Name | title}}[float64 {{$cmpTypeParamRS}}](a, b)
+	expected = {{.Name}}VVRS[float64]{}
 	assert.Equal(op, expected)
 {{ end }}
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParam}}](a, b)
-	expected = {{.Name}}VS[float64, *dense.Dense[float64] {{$cmpTypeParam}}]{ }
+	op = {{.Name | title}}[float64 {{$cmpTypeParam}}](a, b)
+	expected = {{.Name}}VS[float64 ]{ }
 	assert.Equal(op, expected)
 
 
 {{ if .IsCmp }}
 	// test vs but retSame = true
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParamRS}}](a, b)
-	expected = {{.Name}}VSRS[float64, *dense.Dense[float64]]{}
+	op = {{.Name | title}}[float64  {{$cmpTypeParamRS}}](a, b)
+	expected = {{.Name}}VSRS[float64]{}
 	assert.Equal(op, expected)
 {{ end }}
 
 
 	// test sv
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParam}}](b, a )
-	expected = {{.Name}}SV[float64, *dense.Dense[float64] {{$cmpTypeParam}}]{ }
+	op = {{.Name | title}}[float64 {{$cmpTypeParam}}](b, a )
+	expected = {{.Name}}SV[float64 ]{ }
 	assert.Equal(op, expected)
 
 {{ if .IsCmp }}
 	// test sv but retSame = true
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParamRS}}](b, a )
-	expected = {{.Name}}SVRS[float64, *dense.Dense[float64] ]{}
+	op = {{.Name | title}}[float64 {{$cmpTypeParamRS}}](b, a )
+	expected = {{.Name}}SVRS[float64]{}
 	assert.Equal(op, expected)
 {{ end }}
 
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParam}}](a, b)
-	expected = {{.Name}}VV[float64, *dense.Dense[float64] {{$cmpTypeParam}}]{ }
+	op = {{.Name | title}}[float64 {{$cmpTypeParam}}](a, b)
+	expected = {{.Name}}VV[float64 ]{ }
 	assert.Equal(op, expected)
 
 
 {{ if .IsCmp }}
 	// test ss but retSame = true
-	op = {{.Name | title}}[float64, *dense.Dense[float64] {{$cmpTypeParamRS}}](a, b)
-	expected = {{.Name}}VVRS[float64, *dense.Dense[float64]]{ }
+	op = {{.Name | title}}[float64 {{$cmpTypeParamRS}}](a, b)
+	expected = {{.Name}}VVRS[float64]{ }
 	assert.Equal(op, expected)
 {{ end }}
 
@@ -783,12 +783,12 @@ func {{.Name | title}}[DT any]() ops.PreallocOp[DT]{
 const doDiffTmplRaw = `{{ if .IsDiff }}
 // DoDiff is the method that allows automatic differentiation of` + " `{{ .Name }}` " + `g.
 func (op {{ .Name }}Op[DT]) DoDiff(ctx context.Context, inputs []datatypes.Tensor, output datatypes.Tensor) error {
-	adv := exprgraph.T2B[DT](inputs[0]).(*dual.Dual[DT])
-	bdv := exprgraph.T2B[DT](inputs[1]).(*dual.Dual[DT])
-	cdv := exprgraph.T2B[DT](output).(*dual.Dual[DT])
+	adv := exprgraph.T2B[DT](inputs[0]).(dual.Value[DT])
+	bdv := exprgraph.T2B[DT](inputs[1]).(dual.Value[DT])
+	cdv := exprgraph.T2B[DT](output).(dual.Value[DT])
 
-	advd := adv.Deriv()
-	bdvd := bdv.Deriv()
+	advd := adv.DVal()
+	bdvd := bdv.DVal()
 
 	_, _, _ = cdv, advd, bdvd
 	panic("Not implemented")

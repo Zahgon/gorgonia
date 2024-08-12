@@ -373,8 +373,10 @@ func unstubbed(file io.Reader, name string) []string {
 				recv = x.Name
 			case *ast.IndexListExpr:
 				recv = x.X.(*ast.Ident).Name
+			case *ast.IndexExpr:
+				recv = x.X.(*ast.Ident).Name
 			default:
-				log.Fatalf("ERROR: Unsupported StarExpr of %T - value %#v in %v", r0.X, r0.X, name)
+				log.Fatalf("ERROR: Unsupported StarExpr of %T - value %v in %v", r0.X, r0.X, name)
 			}
 		case *ast.IndexListExpr:
 			recv = r0.X.(*ast.Ident).Name

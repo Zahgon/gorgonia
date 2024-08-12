@@ -15,14 +15,14 @@ import (
 )
 
 func Test_gteVVRS_RetSame(t *testing.T) {
-	op := gteVVRS[float64, *dense.Dense[float64]]{}
+	op := gteVVRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -86,14 +86,14 @@ func Test_gteVVRS_RetSame(t *testing.T) {
 }
 
 func Test_gteVSRS_RetSame(t *testing.T) {
-	op := gteVSRS[float64, *dense.Dense[float64]]{}
+	op := gteVSRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -144,14 +144,14 @@ func Test_gteVSRS_RetSame(t *testing.T) {
 }
 
 func Test_gteSVRS_RetSame(t *testing.T) {
-	op := gteSVRS[float64, *dense.Dense[float64]]{}
+	op := gteSVRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -202,15 +202,15 @@ func Test_gteSVRS_RetSame(t *testing.T) {
 }
 
 func Test_gteVV(t *testing.T) {
-	op := gteVV[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := gteVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -273,15 +273,15 @@ func Test_gteVV(t *testing.T) {
 }
 
 func Test_gteVS(t *testing.T) {
-	op := gteVS[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := gteVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -331,15 +331,15 @@ func Test_gteVS(t *testing.T) {
 }
 
 func Test_gteSV(t *testing.T) {
-	op := gteSV[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := gteSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error

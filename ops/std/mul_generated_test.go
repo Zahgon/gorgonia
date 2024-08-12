@@ -15,14 +15,14 @@ import (
 )
 
 func Test_mulVV(t *testing.T) {
-	op := mulVV[float64, *dense.Dense[float64]]{}
+	op := mulVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -86,14 +86,14 @@ func Test_mulVV(t *testing.T) {
 }
 
 func Test_mulVS(t *testing.T) {
-	op := mulVS[float64, *dense.Dense[float64]]{}
+	op := mulVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -144,14 +144,14 @@ func Test_mulVS(t *testing.T) {
 }
 
 func Test_mulSV(t *testing.T) {
-	op := mulSV[float64, *dense.Dense[float64]]{}
+	op := mulSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape

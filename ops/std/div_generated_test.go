@@ -15,14 +15,14 @@ import (
 )
 
 func Test_divVV(t *testing.T) {
-	op := divVV[float64, *dense.Dense[float64]]{}
+	op := divVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -86,14 +86,14 @@ func Test_divVV(t *testing.T) {
 }
 
 func Test_divVS(t *testing.T) {
-	op := divVS[float64, *dense.Dense[float64]]{}
+	op := divVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -144,14 +144,14 @@ func Test_divVS(t *testing.T) {
 }
 
 func Test_divSV(t *testing.T) {
-	op := divSV[float64, *dense.Dense[float64]]{}
+	op := divSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape

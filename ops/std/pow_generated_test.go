@@ -16,14 +16,14 @@ import (
 )
 
 func Test_powVV(t *testing.T) {
-	op := powVV[float64, *dense.Dense[float64]]{}
+	op := powVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -87,14 +87,14 @@ func Test_powVV(t *testing.T) {
 }
 
 func Test_powVS(t *testing.T) {
-	op := powVS[float64, *dense.Dense[float64]]{}
+	op := powVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -145,14 +145,14 @@ func Test_powVS(t *testing.T) {
 }
 
 func Test_powSV(t *testing.T) {
-	op := powSV[float64, *dense.Dense[float64]]{}
+	op := powSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape

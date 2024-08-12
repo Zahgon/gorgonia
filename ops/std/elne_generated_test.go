@@ -15,14 +15,14 @@ import (
 )
 
 func Test_elNeVVRS_RetSame(t *testing.T) {
-	op := elNeVVRS[float64, *dense.Dense[float64]]{}
+	op := elNeVVRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -86,14 +86,14 @@ func Test_elNeVVRS_RetSame(t *testing.T) {
 }
 
 func Test_elNeVSRS_RetSame(t *testing.T) {
-	op := elNeVSRS[float64, *dense.Dense[float64]]{}
+	op := elNeVSRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -144,14 +144,14 @@ func Test_elNeVSRS_RetSame(t *testing.T) {
 }
 
 func Test_elNeSVRS_RetSame(t *testing.T) {
-	op := elNeSVRS[float64, *dense.Dense[float64]]{}
+	op := elNeSVRS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b, c *dense.Dense[float64]
+	var a, b, c tensor.Basic[float64]
 
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
@@ -202,15 +202,15 @@ func Test_elNeSVRS_RetSame(t *testing.T) {
 }
 
 func Test_elNeVV(t *testing.T) {
-	op := elNeVV[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := elNeVV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do (using tensor-tensor) */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -273,15 +273,15 @@ func Test_elNeVV(t *testing.T) {
 }
 
 func Test_elNeVS(t *testing.T) {
-	op := elNeVS[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := elNeVS[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
@@ -331,15 +331,15 @@ func Test_elNeVS(t *testing.T) {
 }
 
 func Test_elNeSV(t *testing.T) {
-	op := elNeSV[float64, *dense.Dense[float64], *dense.Dense[bool]]{}
+	op := elNeSV[float64]{}
 	// basic test
 	assert.Equal(t, 2, op.Arity())
 
 	/* Do */
 
 	// set up
-	var a, b *dense.Dense[float64]
-	var c *dense.Dense[bool]
+	var a, b tensor.Basic[float64]
+	var c tensor.Basic[bool]
 	var expectedType hm.Type
 	var expectedShape shapes.Shape
 	var err error
