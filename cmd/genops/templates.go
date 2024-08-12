@@ -116,6 +116,10 @@ func (op {{.Name}}Op[DT]) do(ctx context.Context, a, b tensor.Basic[DT], preallo
 	if err != nil {
 		return retVal, err
 	}
+	var ok bool
+	if retVal, ok = ret.(tensor.Basic[bool]); !ok {
+		return nil, errors.Errorf("Expected %T. Got %v of %T instead", retVal, ret)
+	}
 
 	asSame := fo.AsType == a.Dtype()
 	toBroadcast := fo.Broadcast.BroadcastData()
@@ -151,6 +155,10 @@ func (op {{.Name}}OpRS[DT]) do(ctx context.Context, a, b, prealloc tensor.Basic[
 	e, newAPA, newAPB, ret, fo, err := tensor.PrepBinOpTrans[DT](a, b, tensor.WithReuse(prealloc), tensor.As(dtype.Datatype[DT]{}))
 	if err != nil {
 		return retVal, err
+	}
+	var ok bool
+	if retVal, ok = ret.(tensor.Basic[DT]); !ok {
+		return nil, errors.Errorf("Expected %T. Got %v of %T instead", retVal, ret)
 	}
 
 	toBroadcast := fo.Broadcast.BroadcastData()
