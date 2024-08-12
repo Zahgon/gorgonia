@@ -205,44 +205,44 @@ func TestLt(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = Lt[float64, float64](a, b)
+	op = Lt[float64, bool](a, b)
 	expected = ltVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = Lt[float64, bool](a, b)
+	op = Lt[float64, float64](a, b)
 	expected = ltVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = Lt[float64, float64](a, b)
+	op = Lt[float64, bool](a, b)
 	expected = ltVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = Lt[float64, bool](a, b)
+	op = Lt[float64, float64](a, b)
 	expected = ltVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = Lt[float64, float64](b, a)
+	op = Lt[float64, bool](b, a)
 	expected = ltSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = Lt[float64, bool](b, a)
+	op = Lt[float64, float64](b, a)
 	expected = ltSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = Lt[float64, float64](a, b)
+	op = Lt[float64, bool](a, b)
 	expected = ltVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = Lt[float64, bool](a, b)
+	op = Lt[float64, float64](a, b)
 	expected = ltVVRS[float64]{}
 	assert.Equal(op, expected)
 
@@ -256,44 +256,44 @@ func TestLte(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = Lte[float64, float64](a, b)
+	op = Lte[float64, bool](a, b)
 	expected = lteVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = Lte[float64, bool](a, b)
+	op = Lte[float64, float64](a, b)
 	expected = lteVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = Lte[float64, float64](a, b)
+	op = Lte[float64, bool](a, b)
 	expected = lteVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = Lte[float64, bool](a, b)
+	op = Lte[float64, float64](a, b)
 	expected = lteVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = Lte[float64, float64](b, a)
+	op = Lte[float64, bool](b, a)
 	expected = lteSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = Lte[float64, bool](b, a)
+	op = Lte[float64, float64](b, a)
 	expected = lteSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = Lte[float64, float64](a, b)
+	op = Lte[float64, bool](a, b)
 	expected = lteVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = Lte[float64, bool](a, b)
+	op = Lte[float64, float64](a, b)
 	expected = lteVVRS[float64]{}
 	assert.Equal(op, expected)
 
@@ -307,44 +307,44 @@ func TestGt(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = Gt[float64, float64](a, b)
+	op = Gt[float64, bool](a, b)
 	expected = gtVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = Gt[float64, bool](a, b)
+	op = Gt[float64, float64](a, b)
 	expected = gtVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = Gt[float64, float64](a, b)
+	op = Gt[float64, bool](a, b)
 	expected = gtVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = Gt[float64, bool](a, b)
+	op = Gt[float64, float64](a, b)
 	expected = gtVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = Gt[float64, float64](b, a)
+	op = Gt[float64, bool](b, a)
 	expected = gtSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = Gt[float64, bool](b, a)
+	op = Gt[float64, float64](b, a)
 	expected = gtSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = Gt[float64, float64](a, b)
+	op = Gt[float64, bool](a, b)
 	expected = gtVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = Gt[float64, bool](a, b)
+	op = Gt[float64, float64](a, b)
 	expected = gtVVRS[float64]{}
 	assert.Equal(op, expected)
 
@@ -358,44 +358,44 @@ func TestGte(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = Gte[float64, float64](a, b)
+	op = Gte[float64, bool](a, b)
 	expected = gteVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = Gte[float64, bool](a, b)
+	op = Gte[float64, float64](a, b)
 	expected = gteVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = Gte[float64, float64](a, b)
+	op = Gte[float64, bool](a, b)
 	expected = gteVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = Gte[float64, bool](a, b)
+	op = Gte[float64, float64](a, b)
 	expected = gteVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = Gte[float64, float64](b, a)
+	op = Gte[float64, bool](b, a)
 	expected = gteSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = Gte[float64, bool](b, a)
+	op = Gte[float64, float64](b, a)
 	expected = gteSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = Gte[float64, float64](a, b)
+	op = Gte[float64, bool](a, b)
 	expected = gteVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = Gte[float64, bool](a, b)
+	op = Gte[float64, float64](a, b)
 	expected = gteVVRS[float64]{}
 	assert.Equal(op, expected)
 
@@ -409,44 +409,44 @@ func TestElEq(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = ElEq[float64, float64](a, b)
+	op = ElEq[float64, bool](a, b)
 	expected = elEqVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = ElEq[float64, bool](a, b)
+	op = ElEq[float64, float64](a, b)
 	expected = elEqVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = ElEq[float64, float64](a, b)
+	op = ElEq[float64, bool](a, b)
 	expected = elEqVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = ElEq[float64, bool](a, b)
+	op = ElEq[float64, float64](a, b)
 	expected = elEqVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = ElEq[float64, float64](b, a)
+	op = ElEq[float64, bool](b, a)
 	expected = elEqSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = ElEq[float64, bool](b, a)
+	op = ElEq[float64, float64](b, a)
 	expected = elEqSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = ElEq[float64, float64](a, b)
+	op = ElEq[float64, bool](a, b)
 	expected = elEqVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = ElEq[float64, bool](a, b)
+	op = ElEq[float64, float64](a, b)
 	expected = elEqVVRS[float64]{}
 	assert.Equal(op, expected)
 
@@ -460,44 +460,44 @@ func TestElNe(t *testing.T) {
 	// test vv
 	a := dense.New[float64](tensor.WithShape(2, 3))
 	b := dense.New[float64](tensor.WithShape(2, 3))
-	op = ElNe[float64, float64](a, b)
+	op = ElNe[float64, bool](a, b)
 	expected = elNeVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test vv but retSame = true
-	op = ElNe[float64, bool](a, b)
+	op = ElNe[float64, float64](a, b)
 	expected = elNeVVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs
 	b = dense.New[float64](tensor.WithShape())
-	op = ElNe[float64, float64](a, b)
+	op = ElNe[float64, bool](a, b)
 	expected = elNeVS[float64]{}
 	assert.Equal(op, expected)
 
 	// test vs but retSame = true
-	op = ElNe[float64, bool](a, b)
+	op = ElNe[float64, float64](a, b)
 	expected = elNeVSRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv
-	op = ElNe[float64, float64](b, a)
+	op = ElNe[float64, bool](b, a)
 	expected = elNeSV[float64]{}
 	assert.Equal(op, expected)
 
 	// test sv but retSame = true
-	op = ElNe[float64, bool](b, a)
+	op = ElNe[float64, float64](b, a)
 	expected = elNeSVRS[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss
 	a = dense.New[float64](tensor.WithShape())
-	op = ElNe[float64, float64](a, b)
+	op = ElNe[float64, bool](a, b)
 	expected = elNeVV[float64]{}
 	assert.Equal(op, expected)
 
 	// test ss but retSame = true
-	op = ElNe[float64, bool](a, b)
+	op = ElNe[float64, float64](a, b)
 	expected = elNeVVRS[float64]{}
 	assert.Equal(op, expected)
 

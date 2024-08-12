@@ -712,8 +712,8 @@ const binopAPITestRaw = `{{- $retSameFalse := "" -}}
 {{- $retSameTrue = ", true" -}}
 {{- $cmptrue = "retSame: true" -}}
 {{- $cmpfalse = "retSame: false" -}}
-{{- $cmpTypeParam = ", float64" -}}
-{{- $cmpTypeParamRS = ", bool" -}}
+{{- $cmpTypeParam = ", bool" -}}
+{{- $cmpTypeParamRS = ", float64" -}}
 {{- end -}}
 
 func Test{{.Name | title}}(t *testing.T){
