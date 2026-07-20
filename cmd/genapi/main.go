@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"io"
 	"log"
 	"os"
@@ -20,7 +17,6 @@ const (
 	apigenOut = "api_gen.go"
 	unOpOut   = "operatorPointwise_unary_gen.go"
 
-	// broadcastOpOut = "operations_broadcast.go"
 	unaryOps  = "operatorPointwise_unary_const.go"
 	binaryOps = "operatorPointwise_binary_const.go"
 )
@@ -65,7 +61,6 @@ func Broadcast{{.FnName}}(a, b *Node{{if .AsSame}}, retSame bool{{end}}, leftPat
 }
 `
 
-// maybeBroadcast is the set of Broadcast functions in Golgi
 const maybeBroadcastTemplateRaw = `// Broadcast{{.FnName}} performs a {{lower .FnName}}. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func Broadcast{{.FnName}}(a, b *G.Node{{if .AsSame}}, retSame bool{{end}}, leftPattern, rightPattern []byte)(*G.Node, error) {
 	if a.Shape().Eq(b.Shape()){
@@ -81,7 +76,7 @@ func Broadcast{{.FnName}}(a, b *G.Node{{if .AsSame}}, retSame bool{{end}}, leftP
 
 func init() {
 	gopath = os.Getenv("GOPATH")
-	// now that go can have a default gopath, this checks that path
+
 	if gopath == "" {
 		usr, err := user.Current()
 		if err != nil {
@@ -104,169 +99,27 @@ func init() {
 	maybeBroadcastTemplate = template.Must(template.New("MaybeBroadcast").Funcs(funcmap).Parse(maybeBroadcastTemplateRaw))
 }
 
-func generateUnary(outFile io.Writer) {
-	// parse operator_unary_const.go
-	filename := path.Join(gorgonialoc, unaryOps)
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, filename, nil, parser.AllErrors)
-	if err != nil {
-		log.Fatal(err)
-	}
+func generateUnary(outFile io.Writer) { _ = "STUB: not implemented"; return }
 
-	unaryNames := constTypes(file.Decls, "ʘUnaryOperatorType", "maxʘUnaryOperator")
-	for _, v := range unaryNames {
-		apiName := strings.Title(strings.TrimSuffix(v, "OpType"))
-		// legacy issue
-		if apiName == "Ln" {
-			apiName = "Log"
-		}
-		data := struct{ FnName, OpType string }{apiName, v}
-		unaryTemplate.Execute(outFile, data)
-	}
-
-}
-
-func generateBinary(outFile io.Writer) {
-	// parse operator_binary_const.go
-	filename := path.Join(gorgonialoc, binaryOps)
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, filename, nil, parser.AllErrors)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	binaryNames := constTypes(file.Decls, "ʘBinaryOperatorType", "maxʘBinaryOpType")
-	log.Printf("%v", binaryNames)
-	for _, v := range binaryNames {
-		apiName := strings.Title(strings.TrimSuffix(v, "OpType"))
-		// legacy issue
-		switch apiName {
-		case "Mul":
-			apiName = "HadamardProd"
-		case "Div":
-			apiName = "HadamardDiv"
-		}
-		data := struct {
-			FnName, OpType string
-			AsSame         bool
-		}{apiName, v, false}
-		switch apiName {
-		case "Lt", "Gt", "Lte", "Gte", "Eq", "Ne":
-			data.AsSame = true
-		}
-		binaryTemplate.Execute(outFile, data)
-	}
-}
+func generateBinary(outFile io.Writer) { _ = "STUB: not implemented"; return }
 
 func generateBroadcastBinOps(tmpl *template.Template, outFile io.Writer) {
-	// parse operator_binary_const.go
-	filename := path.Join(gorgonialoc, binaryOps)
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, filename, nil, parser.AllErrors)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	binaryNames := constTypes(file.Decls, "ʘBinaryOperatorType", "maxʘBinaryOpType")
-	log.Printf("%v", binaryNames)
-	for _, v := range binaryNames {
-		apiName := strings.Title(strings.TrimSuffix(v, "OpType"))
-		// legacy issue
-		switch apiName {
-		case "Mul":
-			apiName = "HadamardProd"
-		case "Div":
-			apiName = "HadamardDiv"
-		}
-		data := struct {
-			FnName, OpType string
-			AsSame         bool
-		}{apiName, v, false}
-		switch apiName {
-		case "Lt", "Gt", "Lte", "Gte", "Eq", "Ne":
-			data.AsSame = true
-		}
-		tmpl.Execute(outFile, data)
-	}
-}
-
-func constTypes(decls []ast.Decl, accept, max string) (names []string) {
-	for i, decl := range decls {
-		log.Printf("DECL %d: %T", i, decl)
-		switch d := decl.(type) {
-		case *ast.GenDecl:
-			if d.Tok.IsKeyword() && d.Tok.String() == "const" {
-				log.Printf("\t%v", d.Tok.String())
-
-				// get the type
-				if len(d.Specs) == 0 {
-					continue
-				}
-
-				var typename string
-				typ := d.Specs[0].(*ast.ValueSpec).Type
-				if typ == nil {
-					continue
-				}
-				if id, ok := typ.(*ast.Ident); ok {
-					typename = id.Name
-				}
-				if typename != accept {
-					continue
-				}
-
-				for _, spec := range d.Specs {
-					name := spec.(*ast.ValueSpec).Names[0].Name
-					if name == max {
-						continue
-					}
-					names = append(names, name)
-				}
-			}
-		default:
-		}
-	}
+	_ = "STUB: not implemented"
 	return
 }
 
-func generateAPI() {
-	outFileName := path.Join(gorgonialoc, apigenOut)
-	outFile, err := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer outFile.Close()
-	fmt.Fprintf(outFile, "package gorgonia\n\n%v\n\n", genmsg)
-	generateUnary(outFile)
-	generateBinary(outFile)
-	generateBroadcastBinOps(broadcastTemplate, outFile)
+func constTypes(decls []ast.Decl, accept, max string) (names []string) {
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func generateInterfaces() {
-	outFileName := path.Join(gorgonialoc, unOpOut)
-	outFile, err := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer outFile.Close()
-	fmt.Fprintf(outFile, "package gorgonia\n\n%v\n\n", genmsg)
-	generateUnaryInterface(outFile)
-}
+func generateAPI() { _ = "STUB: not implemented"; return }
 
-func generateGolgiAPI() {
-	outFileName := path.Join(golgiloc, apigenOut)
-	outFile, err := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer outFile.Close()
-	fmt.Fprintf(outFile, "package golgi\n\n%v\n\n", genmsg)
-	generateBroadcastBinOps(maybeBroadcastTemplate, outFile)
-}
+func generateInterfaces() { _ = "STUB: not implemented"; return }
+
+func generateGolgiAPI() { _ = "STUB: not implemented"; return }
 
 func main() {
-	// generateAPI()
-	// generateInterfaces()
-	// functionSignatures()
+
 	generateGolgiAPI()
 }

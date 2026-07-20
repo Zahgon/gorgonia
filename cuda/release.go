@@ -1,3 +1,4 @@
+//go:build !debug
 // +build !debug
 
 package cuda
@@ -10,12 +11,12 @@ import (
 var logger = log.New(os.Stderr, "", 0)
 var replacement = "\n"
 
-func tabcount() int { return 0 }
+func tabcount() int { _ = "STUB: not implemented"; return 0 }
 
-func enterLogScope() {}
+func enterLogScope() { _ = "STUB: not implemented"; return }
 
-func leaveLogScope() {}
+func leaveLogScope() { _ = "STUB: not implemented"; return }
 
-func logf(format string, others ...interface{}) {}
+func logf(format string, others ...interface{}) { _ = "STUB: not implemented"; return }
 
-func allocatorLogf(format string, attrs ...interface{}) {}
+func allocatorLogf(format string, attrs ...interface{}) { _ = "STUB: not implemented"; return }

@@ -8,7 +8,7 @@ type LayerConfig struct {
 type DeepConfig struct {
 	LayerConfig
 
-	Size              int // total number of examples
+	Size              int
 	Layers            int
 	HiddenLayersSizes []int
 }

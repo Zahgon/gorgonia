@@ -1,9 +1,6 @@
+//go:build !amd64
 // +build !amd64
 
 package gorgonia
 
-func divmod(a, b int) (q, r int) {
-	q = a / b
-	r = a % b
-	return
-}
+func divmod(a, b int) (q, r int) { _ = "STUB: not implemented"; return 0, 0 }

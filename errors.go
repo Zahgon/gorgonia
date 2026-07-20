@@ -1,85 +1,61 @@
 package gorgonia
 
-import (
-	"fmt"
-
-	"github.com/pkg/errors"
-)
-
-// NoOpError is an error returned when an operation does nothing.
 type NoOpError interface {
 	NoOp() bool
 }
 
 type noopError struct{}
 
-func (e noopError) NoOp() bool    { return true }
-func (e noopError) Error() string { return "NoOp" }
+func (e noopError) NoOp() bool    { _ = "STUB: not implemented"; return false }
+func (e noopError) Error() string { _ = "STUB: not implemented"; return "" }
 
-// errNoStabilization is an error used internally for when there is no stabilization mechanism is found.
 type errNoStabilization interface {
 	error
 	noStabilization() bool
 }
 
-// nostabilizationErr is used internally to communicate that there isn't any stabilization possible
 type noStabilizationErr struct{}
 
-func (noStabilizationErr) Error() string         { return "No stabilization mechanism found" }
-func (noStabilizationErr) noStabilization() bool { return true }
+func (noStabilizationErr) Error() string         { _ = "STUB: not implemented"; return "" }
+func (noStabilizationErr) noStabilization() bool { _ = "STUB: not implemented"; return false }
 
-// noIncrErr is an error used internally when a Value cannot be incremented
 type noIncrErr struct {
 	v Value
 }
 
-func (noIncrErr) Error() string  { return incrErr }
-func (e noIncrErr) Value() Value { return e.v }
+func (noIncrErr) Error() string  { _ = "STUB: not implemented"; return "" }
+func (e noIncrErr) Value() Value { _ = "STUB: not implemented"; return *new(Value) }
 
-// oomError represents an Out of tensor.Memory error. It is typically used for CUDA related machine work
 type oomError struct {
 	res       int64
 	allocated int64
 }
 
-func (e oomError) Reserved() int64  { return e.res }
-func (e oomError) Allocated() int64 { return e.allocated }
-func (e oomError) Error() string    { return fmt.Sprintf("allocated/reserved: %v/%v", e.allocated, e.res) }
+func (e oomError) Reserved() int64  { _ = "STUB: not implemented"; return 0 }
+func (e oomError) Allocated() int64 { _ = "STUB: not implemented"; return 0 }
+func (e oomError) Error() string    { _ = "STUB: not implemented"; return "" }
 
-// AutoDiffError is an error which should be passed if the function is not differentiable. This is useful for Op implementations
 type AutoDiffError struct{}
 
-func (err AutoDiffError) Error() string { return "AutoDiffError" }
+func (err AutoDiffError) Error() string { _ = "STUB: not implemented"; return "" }
 
-// vmContextualError is an error that is used to wrap errors that arise from the VM
 type vmContextualError struct {
 	error
-	node  *Node // which node was it processing
-	instr int   // what instruction ID it was
+	node  *Node
+	instr int
 }
 
-func (err vmContextualError) Node() *Node        { return err.node }
-func (err vmContextualError) Value() Value       { return err.node.Value() }
-func (err vmContextualError) InstructionID() int { return err.instr }
-func (err vmContextualError) Err() error         { return err.error }
+func (err vmContextualError) Node() *Node        { _ = "STUB: not implemented"; return nil }
+func (err vmContextualError) Value() Value       { _ = "STUB: not implemented"; return *new(Value) }
+func (err vmContextualError) InstructionID() int { _ = "STUB: not implemented"; return 0 }
+func (err vmContextualError) Err() error         { _ = "STUB: not implemented"; return nil }
 
-func nyi(what string, implFor interface{}) error {
-	return errors.Errorf(nyiFail, what, implFor)
-}
+func nyi(what string, implFor interface{}) error { _ = "STUB: not implemented"; return nil }
 
-func nondiffErr(op Op) error {
-	return errors.Errorf("%s is a non-differentiable function", op)
-}
+func nondiffErr(op Op) error { _ = "STUB: not implemented"; return nil }
 
-// checkErrSetDeriv sets the deriv if the error is a Valuer. Helper function for linalg operations
-func checkErrSetDeriv(err error, dv *dualValue) error {
-	if ver, ok := err.(Valuer); ok {
-		return dv.SetDeriv(ver.Value())
-	}
-	return err
-}
+func checkErrSetDeriv(err error, dv *dualValue) error { _ = "STUB: not implemented"; return nil }
 
-// SymDiffError provides the context at which an error occurred
 type SymDiffError struct {
 	nodes   Nodes
 	single  *Node
@@ -88,16 +64,12 @@ type SymDiffError struct {
 	err     error
 }
 
-func (err SymDiffError) Error() string { return err.err.Error() }
+func (err SymDiffError) Error() string { _ = "STUB: not implemented"; return "" }
 
-// Nodes returns the nodes involved in the error
-func (err SymDiffError) Nodes() Nodes { return err.nodes }
+func (err SymDiffError) Nodes() Nodes { _ = "STUB: not implemented"; return *new(Nodes) }
 
-// Node returns a specific node involved in the error
-func (err SymDiffError) Node() *Node { return err.single }
+func (err SymDiffError) Node() *Node { _ = "STUB: not implemented"; return nil }
 
-// Grads returns the grads involved in the error
-func (err SymDiffError) Grads() map[*Node]Nodes { return err.gradMap }
+func (err SymDiffError) Grads() map[*Node]Nodes { _ = "STUB: not implemented"; return nil }
 
-// Grad returns a specific grad involved in the error
-func (err SymDiffError) Grad() *Node { return err.grad }
+func (err SymDiffError) Grad() *Node { _ = "STUB: not implemented"; return nil }

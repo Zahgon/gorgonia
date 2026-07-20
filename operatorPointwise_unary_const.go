@@ -1,22 +1,17 @@
 package gorgonia
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/chewxy/math32"
 )
 
 var (
-	/* float64 */
-
-	// non differentiable
 	absf64   = sf64UnaryOperator(math.Abs)
 	signf64  = sf64UnaryOperator(_signf64)
 	ceilf64  = sf64UnaryOperator(math.Ceil)
 	floorf64 = sf64UnaryOperator(math.Floor)
 
-	// differentiable
 	sinf64         = sf64UnaryOperator(math.Sin)
 	cosf64         = sf64UnaryOperator(math.Cos)
 	expf64         = sf64UnaryOperator(math.Exp)
@@ -28,27 +23,19 @@ var (
 	inversef64     = sf64UnaryOperator(_inversef64)
 	inverseSqrtf64 = sf64UnaryOperator(_inverseSqrtf64)
 
-	// activation functions
 	cubef64    = sf64UnaryOperator(_cubef64)
 	tanhf64    = sf64UnaryOperator(_tanhf64)
 	sigmoidf64 = sf64UnaryOperator(_sigmoidf64)
 
-	// numerical stabilization optimization
 	log1pf64    = sf64UnaryOperator(math.Log1p)
 	expm1f64    = sf64UnaryOperator(math.Expm1)
 	softplusf64 = sf64UnaryOperator(_softplusf64)
-	// softplus isn't necessarily only a numerical stabilization op
-	// (you can use it elsewhere), but I included it under numerical optimization
 
-	/* Float32 */
-
-	// non differentiable
 	absf32   = sf32UnaryOperator(math32.Abs)
 	signf32  = sf32UnaryOperator(_signf32)
 	ceilf32  = sf32UnaryOperator(math32.Ceil)
 	floorf32 = sf32UnaryOperator(math32.Floor)
 
-	// start differentiable
 	sinf32         = sf32UnaryOperator(math32.Sin)
 	cosf32         = sf32UnaryOperator(math32.Cos)
 	expf32         = sf32UnaryOperator(math32.Exp)
@@ -60,12 +47,10 @@ var (
 	inversef32     = sf32UnaryOperator(_inversef32)
 	inverseSqrtf32 = sf32UnaryOperator(_inverseSqrtf32)
 
-	// typically used in activation functions
 	cubef32    = sf32UnaryOperator(_cubef32)
 	tanhf32    = sf32UnaryOperator(_tanhf32)
 	sigmoidf32 = sf32UnaryOperator(_sigmoidf32)
 
-	// numerical stabilization optimization
 	log1pf32    = sf32UnaryOperator(math32.Log1p)
 	expm1f32    = sf32UnaryOperator(math32.Expm1)
 	softplusf32 = sf32UnaryOperator(_softplusf32)
@@ -79,7 +64,6 @@ const (
 	ceilOpType
 	floorOpType
 
-	// start differentiable
 	sinOpType
 	cosOpType
 	expOpType
@@ -88,32 +72,22 @@ const (
 	negOpType
 	squareOpType
 	sqrtOpType
-	inverseOpType     // multiplicative inverse
-	inverseSqrtOpType // 1/sqrt(x)
+	inverseOpType
+	inverseSqrtOpType
 
-	// typically used in activation functions
 	cubeOpType
 	tanhOpType
 	sigmoidOpType
 
-	// optimization related
 	log1pOpType
 	expm1OpType
 	softplusOpType
 
-	maxʘUnaryOperator // delimits end of all possible unary ops
+	maxʘUnaryOperator
 )
 
-func (u ʘUnaryOperatorType) String() string {
-	if u >= maxʘUnaryOperator {
-		return fmt.Sprintf("UNSUPPORTED UNARY OPERATOR (%d); max: %d", u, maxʘUnaryOperator)
-	}
+func (u ʘUnaryOperatorType) String() string { _ = "STUB: not implemented"; return "" }
 
-	return ʘUnaryOpStrs[u]
-}
-
-// ʘUnaryOpStrs is the string representation for a unaryOpType
-// It should be held constant.
 var ʘUnaryOpStrs = [maxʘUnaryOperator]string{
 	"abs", "sign", "ceil", "floor",
 	"sin", "cos", "exp",
@@ -124,8 +98,6 @@ var ʘUnaryOpStrs = [maxʘUnaryOperator]string{
 	"log1p", "expm1", "softplus",
 }
 
-// ʘUnaryOpDifferentiable is the array of whether a unary operator is differentiable
-// It should be held constant
 var ʘUnaryOpDifferentiable = [maxʘUnaryOperator]bool{
 	true, false, false, false,
 	true, true, true,

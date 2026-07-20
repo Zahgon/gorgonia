@@ -7,21 +7,17 @@ import (
 )
 
 const (
-	// graphviz name for a full graph
 	fullGraphName = "fullGraph"
 
-	// group names
 	exprgraphClust = "expressionGraph"
 	constantsClust = "constants"
 	inputsClust    = "inputs"
 	gradClust      = "gradients"
 	strayClust     = "undifferentiated nodes"
 
-	// subgraphs to rank the same
 	outsideSubG = "outsides"
 	inputConsts = "inputConsts"
 
-	// special nodes for graphviz hacking
 	outsideRoot   = "outsideRoot"
 	outsideInputs = "outsideInputs"
 	insideInputs  = "insideInputs"
@@ -32,7 +28,6 @@ const (
 	outsideGrads  = "outsideGrads"
 	insideGrads   = "insideGrads"
 
-	// error messages
 	sortFail            = "Failed to sort"
 	cloneFail           = "Failed to carry clone(%v)"
 	clone0Fail          = "Failed to carry clone0()"

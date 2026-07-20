@@ -1,84 +1,95 @@
 package gorgonia
 
 import (
-	"fmt"
 	"hash"
 
 	"github.com/chewxy/hm"
 	"gorgonia.org/tensor"
 )
 
-/*
-This file contains code for Ops that aren't really functions in the sense that they aren't pure.
-
-Since they're not adherents to the Church of Lambda, they are INFIDELS! A fatwa will be issued on them shortly
-
-*/
-
 type stmtOp interface {
 	Op
 	isStmt() bool
 }
 
-// letOp is not really a function. It's more of a binding statement.
-// However, it's implemented as a Op so that it can be counted for register allocation and liveness
 type letOp struct{}
 
-func (op letOp) Arity() int                                                      { return 0 }
-func (op letOp) Type() hm.Type                                                   { return nil }
-func (op letOp) ReturnsPtr() bool                                                { return true }
-func (op letOp) OverwritesInput() int                                            { return 0 }
-func (op letOp) CallsExtern() bool                                               { return false }
-func (op letOp) InferShape(...DimSizer) (tensor.Shape, error)                    { return nil, nil }
-func (op letOp) DiffWRT(int) []bool                                              { return nil }
-func (op letOp) SymDiff(inputs Nodes, outputNode, gradNode *Node) (Nodes, error) { return nil, nil }
-func (op letOp) Do(vals ...Value) (Value, error)                                 { return nil, nil }
-func (op letOp) String() string                                                  { return "=" }
-func (op letOp) WriteHash(h hash.Hash)                                           { h.Write([]byte("let")) }
-func (op letOp) Hashcode() uint32                                                { return simpleHash(op) }
+func (op letOp) Arity() int           { _ = "STUB: not implemented"; return 0 }
+func (op letOp) Type() hm.Type        { _ = "STUB: not implemented"; return *new(hm.Type) }
+func (op letOp) ReturnsPtr() bool     { _ = "STUB: not implemented"; return false }
+func (op letOp) OverwritesInput() int { _ = "STUB: not implemented"; return 0 }
+func (op letOp) CallsExtern() bool    { _ = "STUB: not implemented"; return false }
+func (op letOp) InferShape(...DimSizer) (tensor.Shape, error) {
+	_ = "STUB: not implemented"
+	return *new(tensor.Shape), nil
+}
+func (op letOp) DiffWRT(int) []bool { _ = "STUB: not implemented"; return nil }
+func (op letOp) SymDiff(inputs Nodes, outputNode, gradNode *Node) (Nodes, error) {
+	_ = "STUB: not implemented"
+	return *new(Nodes), nil
+}
+func (op letOp) Do(vals ...Value) (Value, error) {
+	_ = "STUB: not implemented"
+	return *new(Value), nil
+}
+func (op letOp) String() string        { _ = "STUB: not implemented"; return "" }
+func (op letOp) WriteHash(h hash.Hash) { _ = "STUB: not implemented"; return }
+func (op letOp) Hashcode() uint32      { _ = "STUB: not implemented"; return 0 }
 
-func (op letOp) isStmt() bool { return true }
+func (op letOp) isStmt() bool { _ = "STUB: not implemented"; return false }
 
-// readOp reads a value off the input. This op ensures that a value used, and hence codegen'd out
 type readOp struct {
-	into *Value // no, it's not a mistake. It's a pointer to a Value (which is an interface{} type)
+	into *Value
 }
 
-func (op readOp) Arity() int                                                      { return 0 }
-func (op readOp) Type() hm.Type                                                   { return nil }
-func (op readOp) ReturnsPtr() bool                                                { return true }
-func (op readOp) OverwritesInput() int                                            { return 0 }
-func (op readOp) CallsExtern() bool                                               { return false }
-func (op readOp) InferShape(...DimSizer) (tensor.Shape, error)                    { return nil, nil }
-func (op readOp) DiffWRT(int) []bool                                              { return nil }
-func (op readOp) SymDiff(inputs Nodes, outputNode, gradNode *Node) (Nodes, error) { return nil, nil }
-func (op readOp) Do(vals ...Value) (Value, error)                                 { return nil, nil }
-func (op readOp) String() string                                                  { return "print" }
-func (op readOp) WriteHash(h hash.Hash)                                           { fmt.Fprintf(h, "print %p", op.into) }
-func (op readOp) Hashcode() uint32                                                { return simpleHash(op) }
+func (op readOp) Arity() int           { _ = "STUB: not implemented"; return 0 }
+func (op readOp) Type() hm.Type        { _ = "STUB: not implemented"; return *new(hm.Type) }
+func (op readOp) ReturnsPtr() bool     { _ = "STUB: not implemented"; return false }
+func (op readOp) OverwritesInput() int { _ = "STUB: not implemented"; return 0 }
+func (op readOp) CallsExtern() bool    { _ = "STUB: not implemented"; return false }
+func (op readOp) InferShape(...DimSizer) (tensor.Shape, error) {
+	_ = "STUB: not implemented"
+	return *new(tensor.Shape), nil
+}
+func (op readOp) DiffWRT(int) []bool { _ = "STUB: not implemented"; return nil }
+func (op readOp) SymDiff(inputs Nodes, outputNode, gradNode *Node) (Nodes, error) {
+	_ = "STUB: not implemented"
+	return *new(Nodes), nil
+}
+func (op readOp) Do(vals ...Value) (Value, error) {
+	_ = "STUB: not implemented"
+	return *new(Value), nil
+}
+func (op readOp) String() string        { _ = "STUB: not implemented"; return "" }
+func (op readOp) WriteHash(h hash.Hash) { _ = "STUB: not implemented"; return }
+func (op readOp) Hashcode() uint32      { _ = "STUB: not implemented"; return 0 }
 
-func (op readOp) isStmt() bool { return true }
+func (op readOp) isStmt() bool { _ = "STUB: not implemented"; return false }
 
-// devTrans is a dummy Op, used to aid in creating the program that is run in a *tapeMachine. It is inserted not into the graph, but into a slice of sorted nodes, and will not show up in thegraph.
 type devTrans struct {
 	from, to Device
 	toNode   *Node
 }
 
-func (op devTrans) Arity() int                                   { panic("not implemented") }
-func (op devTrans) Type() hm.Type                                { panic("not implemented") }
-func (op devTrans) InferShape(...DimSizer) (tensor.Shape, error) { panic("not implemented") }
-func (op devTrans) Do(...Value) (Value, error)                   { panic("not implemented") }
-func (op devTrans) ReturnsPtr() bool                             { return false }
-func (op devTrans) CallsExtern() bool                            { return true }
-func (op devTrans) OverwritesInput() int                         { return -1 }
-func (op devTrans) WriteHash(h hash.Hash)                        { fmt.Fprintf(h, "from:%vto%v", op.from, op.to) }
-func (op devTrans) Hashcode() uint32                             { return simpleHash(op) }
+func (op devTrans) Arity() int    { _ = "STUB: not implemented"; return 0 }
+func (op devTrans) Type() hm.Type { _ = "STUB: not implemented"; return *new(hm.Type) }
+func (op devTrans) InferShape(...DimSizer) (tensor.Shape, error) {
+	_ = "STUB: not implemented"
+	return *new(tensor.Shape), nil
+}
+func (op devTrans) Do(...Value) (Value, error) { _ = "STUB: not implemented"; return *new(Value), nil }
+func (op devTrans) ReturnsPtr() bool           { _ = "STUB: not implemented"; return false }
+func (op devTrans) CallsExtern() bool          { _ = "STUB: not implemented"; return false }
+func (op devTrans) OverwritesInput() int       { _ = "STUB: not implemented"; return 0 }
+func (op devTrans) WriteHash(h hash.Hash)      { _ = "STUB: not implemented"; return }
+func (op devTrans) Hashcode() uint32           { _ = "STUB: not implemented"; return 0 }
 
-func (op devTrans) String() string { return fmt.Sprintf("[CP %v %v]", op.from, op.to) }
-func (op devTrans) isStmt() bool   { return true }
+func (op devTrans) String() string { _ = "STUB: not implemented"; return "" }
+func (op devTrans) isStmt() bool   { _ = "STUB: not implemented"; return false }
 
 func (op devTrans) CUDADo(extern External, dev Device, prealloc Value, inputs ...Value) (retVal Value, err error) {
-	return nil, nil
+	_ = "STUB: not implemented"
+	return *new(Value), nil
 }
-func (op devTrans) CUDAFuncName() string { return op.String() }
+
+func (op devTrans) CUDAFuncName() string { _ = "STUB: not implemented"; return "" }

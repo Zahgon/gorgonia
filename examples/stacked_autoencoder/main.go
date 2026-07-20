@@ -44,40 +44,13 @@ func init() {
 }
 
 func predictBatch(logprobs tensor.Tensor, batchSize int) (guesses []int, err error) {
-	var argmax tensor.Tensor
-	if batchSize == 1 {
-		argmax, err = tensor.Argmin(logprobs, 0)
-	} else {
-		argmax, err = tensor.Argmin(logprobs, 1)
-	}
-	if err != nil {
-		return nil, err
-	}
-	guesses = argmax.Data().([]int)
-	return
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func makeTargets(targets tensor.Tensor) []int {
-	ys := make([]int, targets.Shape()[0])
-	ys = ys[:0]
-	for i := 0; i < targets.Shape()[0]; i++ {
-		ysl, _ := targets.Slice(T.S(i))
-		raw := ysl.Data().([]float64)
-		for i, v := range raw {
-			if v == 0.9 {
-				ys = append(ys, i)
-				break
-			}
-		}
-	}
-	return ys
-}
+func makeTargets(targets tensor.Tensor) []int { _ = "STUB: not implemented"; return nil }
 
-func verboseLog(format string, attrs ...interface{}) {
-	if *verbose {
-		log.Printf(format, attrs...)
-	}
-}
+func verboseLog(format string, attrs ...interface{}) { _ = "STUB: not implemented"; return }
 
 func main() {
 	flag.Parse()
@@ -117,7 +90,6 @@ func main() {
 	g := T.NewGraph()
 	sda := NewStackedDA(g, batchSize, size, inputSize, outputSize, layers, hiddenSizes, corruptions)
 
-	// start CPU profiling before we start training
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -135,7 +107,6 @@ func main() {
 		}
 	}
 
-	// Because for now LispMachine doesn't support batched BLAS
 	verboseLog("Starting to finetune now")
 
 	T.Use(gonum.Implementation{})
@@ -146,17 +117,15 @@ func main() {
 		}
 	}
 
-	// save model
 	if *save != "" {
 		if err = sda.Save(*save); err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	// Visualize
 	visualizeLayer := *viz
 	verboseLog("Visualizing %dth layer", visualizeLayer)
-	finalWeights := sda.autoencoders[visualizeLayer].w.Value().(tensor.Tensor).Clone().(tensor.Tensor) // TODO: rewrite this plz, it's hard to understand
+	finalWeights := sda.autoencoders[visualizeLayer].w.Value().(tensor.Tensor).Clone().(tensor.Tensor)
 	finalWeights.T()
 	finalWeights.Transpose()
 	for i := 0; i < finalWeights.Shape()[0]; i++ {
@@ -169,11 +138,6 @@ func main() {
 		f.Close()
 	}
 
-	/* PREDICTION TIME */
-
-	// here I'm using the test dataset as prediction.
-	// in real life you should probably be doing crossvalidations and whatnots
-	// but in this demo, we're going to skip all those
 	verboseLog("pred")
 	testX, testY, err := mnist.Load("test", loc, dt)
 	if err != nil {

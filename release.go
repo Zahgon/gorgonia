@@ -1,8 +1,8 @@
+//go:build !debug
 // +build !debug
 
 package gorgonia
 
-// DEBUG indicates if this build is in debug mode. It is not.
 const DEBUG = false
 
 const (
@@ -17,32 +17,29 @@ const (
 	allocatorDev      = false
 )
 
-func tabcount() int { return 0 }
+func tabcount() int { _ = "STUB: not implemented"; return 0 }
 
-func enterLogScope()                                   {}
-func leaveLogScope()                                   {}
-func logf(format string, others ...interface{})        {}
-func compileLogf(format string, attrs ...interface{})  {}
-func shapeLogf(format string, attrs ...interface{})    {}
-func typeSysLogf(format string, attrs ...interface{})  {}
-func symdiffLogf(format string, attrs ...interface{})  {}
-func autodiffLogf(format string, attrs ...interface{}) {}
-func machineLogf(format string, attrs ...interface{})  {}
-func stabLogf(format string, attrs ...interface{})     {}
-func solverLogf(format string, attrs ...interface{})   {}
-func cudaLogf(format string, attrs ...interface{})     {}
-func allocatorLogf(format string, attr ...interface{}) {}
-func recoverFrom(format string, attrs ...interface{})  {}
+func enterLogScope()                                   { _ = "STUB: not implemented"; return }
+func leaveLogScope()                                   { _ = "STUB: not implemented"; return }
+func logf(format string, others ...interface{})        { _ = "STUB: not implemented"; return }
+func compileLogf(format string, attrs ...interface{})  { _ = "STUB: not implemented"; return }
+func shapeLogf(format string, attrs ...interface{})    { _ = "STUB: not implemented"; return }
+func typeSysLogf(format string, attrs ...interface{})  { _ = "STUB: not implemented"; return }
+func symdiffLogf(format string, attrs ...interface{})  { _ = "STUB: not implemented"; return }
+func autodiffLogf(format string, attrs ...interface{}) { _ = "STUB: not implemented"; return }
+func machineLogf(format string, attrs ...interface{})  { _ = "STUB: not implemented"; return }
+func stabLogf(format string, attrs ...interface{})     { _ = "STUB: not implemented"; return }
+func solverLogf(format string, attrs ...interface{})   { _ = "STUB: not implemented"; return }
+func cudaLogf(format string, attrs ...interface{})     { _ = "STUB: not implemented"; return }
+func allocatorLogf(format string, attr ...interface{}) { _ = "STUB: not implemented"; return }
+func recoverFrom(format string, attrs ...interface{})  { _ = "STUB: not implemented"; return }
 
-// GraphCollisionStats returns the collisions in the graph only when built with the debug tag, otherwise it's a noop that returns 0
-func GraphCollisionStats() (int, int, int) { return 0, 0, 0 }
+func GraphCollisionStats() (int, int, int) { _ = "STUB: not implemented"; return 0, 0, 0 }
 
-func incrCC() {}
-func incrEC() {}
-func incrNN() {}
+func incrCC() { _ = "STUB: not implemented"; return }
+func incrEC() { _ = "STUB: not implemented"; return }
+func incrNN() { _ = "STUB: not implemented"; return }
 
-/* Compilation related debug utility functions/methods*/
-func logCompileState(name string, g *ExprGraph, df *dataflow) {}
+func logCompileState(name string, g *ExprGraph, df *dataflow) { _ = "STUB: not implemented"; return }
 
-/* Analysis Debug Utility Functions/Methods */
-func (df *dataflow) debugIntervals(sorted Nodes) {}
+func (df *dataflow) debugIntervals(sorted Nodes) { _ = "STUB: not implemented"; return }

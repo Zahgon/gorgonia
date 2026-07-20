@@ -1,3 +1,4 @@
+//go:build !cuda
 // +build !cuda
 
 package gorgonia
@@ -9,8 +10,11 @@ func (m *lispMachine) init() error {
 	return nil
 }
 
-func (m *lispMachine) execDevTrans(op devTrans, n *Node, children Nodes) (err error) { return nil }
+func (m *lispMachine) execDevTrans(op devTrans, n *Node, children Nodes) (err error) {
+	_ = "STUB: not implemented"
+	return nil
+}
 
-func finalizeLispMachine(m *lispMachine) {}
+func finalizeLispMachine(m *lispMachine) { _ = "STUB: not implemented"; return }
 
-func (m *lispMachine) ForceCPU() {}
+func (m *lispMachine) ForceCPU() { _ = "STUB: not implemented"; return }

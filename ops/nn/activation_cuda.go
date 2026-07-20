@@ -1,14 +1,12 @@
+//go:build cuda
 // +build cuda
 
 package nnops
 
 import (
-	"fmt"
 	"hash"
 
 	"github.com/chewxy/hm"
-	"gorgonia.org/cu/dnn"
-	t2cudnn "gorgonia.org/cu/dnn/interop"
 	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
@@ -18,79 +16,44 @@ type activation struct {
 	xDesc, yDesc *cudnn.TensorDescriptor
 }
 
-func newRelu() (*activation, error) {
-	act, err := cudnn.NewActivation(cudnn.ReLU, cudnn.PropagateNan, 1.0)
-	if err != nil {
-		return nil, err
-	}
-	return &activation{Activation: act}, nil
-}
+func newRelu() (*activation, error) { _ = "STUB: not implemented"; return nil, nil }
 
-func (op *activation) Arity() int { return 1 }
+func (op *activation) Arity() int { _ = "STUB: not implemented"; return 0 }
 
-func (op *activation) Type() hm.Type {
-	return hm.NewFnType(hm.TypeVariable('a'), hm.TypeVariable('a'))
-}
+func (op *activation) Type() hm.Type { _ = "STUB: not implemented"; return *new(hm.Type) }
 
 func (op *activation) InferShape(inputs ...gorgonia.DimSizer) (tensor.Shape, error) {
-	if err := checkArity(op, len(inputs)); err != nil {
-		return nil, err
-	}
-	return inputs[0].(tensor.Shape).Clone(), nil
+	_ = "STUB: not implemented"
+	return *new(tensor.Shape), nil
 }
 
 func (op *activation) Do(...gorgonia.Value) (gorgonia.Value, error) {
-	panic("not implemented")
+	_ = "STUB: not implemented"
+	return *new(gorgonia.Value), nil
 }
 
-func (op *activation) ReturnsPtr() bool { return true }
+func (op *activation) ReturnsPtr() bool { _ = "STUB: not implemented"; return false }
 
-func (op *activation) CallsExtern() bool { return true }
+func (op *activation) CallsExtern() bool { _ = "STUB: not implemented"; return false }
 
-func (op *activation) OverwritesInput() int { return -1 }
+func (op *activation) OverwritesInput() int { _ = "STUB: not implemented"; return 0 }
 
-func (op *activation) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%v", op.Activation.Mode()) }
+func (op *activation) WriteHash(h hash.Hash) { _ = "STUB: not implemented"; return }
 
-func (op *activation) Hashcode() uint32 { return simpleHash(op) }
+func (op *activation) Hashcode() uint32 { _ = "STUB: not implemented"; return 0 }
 
-func (op *activation) String() string { return fmt.Sprintf("%v", op.Activation.Mode()) }
+func (op *activation) String() string { _ = "STUB: not implemented"; return "" }
 
-func (op *activation) DiffWRT(inputs int) []bool { return []bool{true} }
+func (op *activation) DiffWRT(inputs int) []bool { _ = "STUB: not implemented"; return nil }
 
 func (op *activation) SymDiff(inputs gorgonia.Nodes, output *gorgonia.Node, grad *gorgonia.Node) (retVal gorgonia.Nodes, err error) {
-	if err = checkArity(op, len(inputs)); err != nil {
-		return
-	}
-
-	diffOp := &activationDiff{activation: op}
-
-	retVal = make(gorgonia.Nodes, 1)
-	retVal[0], err = gorgonia.ApplyOp(diffOp, inputs[0], output, grad)
-	return
+	_ = "STUB: not implemented"
+	return *new(gorgonia.Nodes), nil
 }
 
 func (op *activation) CUDADo(extern gorgonia.External, dev gorgonia.Device, prealloc gorgonia.Value, inputs ...gorgonia.Value) (retVal gorgonia.Value, err error) {
-	if err = checkArity(op, len(inputs)); err != nil {
-		return
-	}
-
-	x := inputs[0]
-
-	if op.xDesc == nil {
-		if op.xDesc, err = t2cudnn.Describe(x.(tensor.Tensor)); err != nil {
-			return
-		}
-	}
-	if op.yDesc == nil {
-		if op.yDesc, err = t2cudnn.Describe(prealloc.(tensor.Tensor)); err != nil {
-			return
-		}
-	}
-
-	machine := extern.(gorgonia.CUDAMachine)
-	ctx := machine.CUDNNContexts()[int(dev)]
-	err = ctx.ActivationForward(op.Activation, 1, op.xDesc, x.(cudnn.Memory), 0, op.yDesc, prealloc.(cudnn.Memory))
-	return prealloc, err
+	_ = "STUB: not implemented"
+	return *new(gorgonia.Value), nil
 }
 
 type activationDiff struct {
@@ -98,56 +61,33 @@ type activationDiff struct {
 	dyDesc, dxDesc *cudnn.TensorDescriptor
 }
 
-func (op *activationDiff) Arity() int {
-	return 3 // x, y, dy, dx
-}
+func (op *activationDiff) Arity() int { _ = "STUB: not implemented"; return 0 }
 
-func (op *activationDiff) Type() hm.Type {
-	return hm.NewFnType(hm.TypeVariable('a'), hm.TypeVariable('a'), hm.TypeVariable('a'), hm.TypeVariable('a'))
-}
+func (op *activationDiff) Type() hm.Type { _ = "STUB: not implemented"; return *new(hm.Type) }
 
 func (op *activationDiff) InferShape(inputs ...gorgonia.DimSizer) (tensor.Shape, error) {
-	if err := checkArity(op, len(inputs)); err != nil {
-		return nil, err
-	}
-	return inputs[0].(tensor.Shape).Clone(), nil
+	_ = "STUB: not implemented"
+	return *new(tensor.Shape), nil
 }
 
-func (op *activationDiff) Do(...gorgonia.Value) (gorgonia.Value, error) { panic("not implemented") }
+func (op *activationDiff) Do(...gorgonia.Value) (gorgonia.Value, error) {
+	_ = "STUB: not implemented"
+	return *new(gorgonia.Value), nil
+}
 
-func (op *activationDiff) ReturnsPtr() bool { return true }
+func (op *activationDiff) ReturnsPtr() bool { _ = "STUB: not implemented"; return false }
 
-func (op *activationDiff) CallsExtern() bool { return true }
+func (op *activationDiff) CallsExtern() bool { _ = "STUB: not implemented"; return false }
 
-func (op *activationDiff) OverwritesInput() int { return -1 }
+func (op *activationDiff) OverwritesInput() int { _ = "STUB: not implemented"; return 0 }
 
-func (op *activationDiff) WriteHash(h hash.Hash) { fmt.Fprintf(h, "DIFF%v", op.Activation.Mode()) }
+func (op *activationDiff) WriteHash(h hash.Hash) { _ = "STUB: not implemented"; return }
 
-func (op *activationDiff) Hashcode() uint32 { return simpleHash(op) }
+func (op *activationDiff) Hashcode() uint32 { _ = "STUB: not implemented"; return 0 }
 
-func (op *activationDiff) String() string { return fmt.Sprintf("DIFF %v", op.Activation.Mode()) }
+func (op *activationDiff) String() string { _ = "STUB: not implemented"; return "" }
 
 func (op *activationDiff) CUDADo(extern gorgonia.External, dev gorgonia.Device, prealloc gorgonia.Value, inputs ...gorgonia.Value) (retVal gorgonia.Value, err error) {
-	x, y, dy := inputs[0], inputs[1], inputs[2]
-	if op.dxDesc == nil {
-		if op.dxDesc, err = t2cudnn.Describe(prealloc.(tensor.Tensor)); err != nil {
-			return
-		}
-	}
-	if op.dyDesc == nil {
-		if op.dyDesc, err = t2cudnn.Describe(dy.(tensor.Tensor)); err != nil {
-			return
-		}
-	}
-	machine := extern.(gorgonia.CUDAMachine)
-	machine.Engines()[int(dev)].DoWork()
-	ctx := machine.CUDNNContexts()[int(dev)]
-
-	err = ctx.ActivationBackward(op.Activation, 1,
-		op.yDesc, y.(cudnn.Memory),
-		op.dyDesc, dy.(cudnn.Memory),
-		op.xDesc, x.(cudnn.Memory),
-		0,
-		op.dxDesc, prealloc.(cudnn.Memory))
-	return prealloc, err
+	_ = "STUB: not implemented"
+	return *new(gorgonia.Value), nil
 }

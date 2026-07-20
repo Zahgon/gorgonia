@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	// Init Graph
+
 	g := G.NewGraph()
 
 	model := NewTinyYOLOv2Net(g, 80, 5, "model/yolov2-tiny.weights")

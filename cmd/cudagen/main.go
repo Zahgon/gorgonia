@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -21,74 +19,18 @@ var sameModule = flag.Bool("same-module", false, "generate a cudamodules.go file
 
 var funcNameRegex = regexp.MustCompile("// .globl	(.+?)\r?\n")
 
-func stripExt(fullpath string) string {
-	_, filename := filepath.Split(fullpath)
-	ext := path.Ext(filename)
-	return filename[:len(filename)-len(ext)]
-}
+func stripExt(fullpath string) string { _ = "STUB: not implemented"; return "" }
 
 func compileCUDA(src string, maj, min int) ([]byte, error) {
-	target, err := ioutil.TempFile("", stripExt(src)+"_*.ptx")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create temporary file for compilation output")
-	}
-	defer target.Close()
-
-	output := fmt.Sprintf("-o=%v", target.Name())
-	arch := fmt.Sprintf("-arch=compute_%d%d", maj, min)
-	var cmd *exec.Cmd
-	if *debug {
-		cmd = exec.Command("nvcc", output, arch, "-lineinfo", "-ptx", "-Xptxas", "--allow-expensive-optimizations", "-fmad=false", "-ftz=false", "-prec-div=true", "-prec-sqrt=true", src)
-	} else {
-		cmd = exec.Command("nvcc", output, arch, "-ptx", "-Xptxas", "--allow-expensive-optimizations", "-fmad=false", "-ftz=false", "-prec-div=true", "-prec-sqrt=true", src)
-	}
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil || stderr.Len() != 0 {
-		return nil, fmt.Errorf("failed to compile with nvcc. Error: %v. nvcc error: %v", err, stderr.String())
-	}
-
-	out, err := ioutil.ReadAll(target)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read compilation output file. Error: %v", err)
-	}
-	if err := os.Remove(target.Name()); err != nil {
-		log.Printf("could not remove temporary file %v", target.Name())
-	}
-	return out, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func packageLoc(name string) (string, error) {
-	cmd := exec.Command("go", "list", "-f", "{{.Dir}}", "-find", name)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil || stderr.Len() != 0 {
-		return "", fmt.Errorf("failed to locate %v. Error: %v. go list error: %v", name, err, stderr.String())
-	}
-	return strings.TrimSpace(stdout.String()), nil
-}
+func packageLoc(name string) (string, error) { _ = "STUB: not implemented"; return "", nil }
 
-func packageInWorkingDir() (string, error) {
-	cmd := exec.Command("go", "list", "-f", "{{.Name}}")
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil || stderr.Len() != 0 {
-		return "", fmt.Errorf("failed to get name of package in working directory. Error: %v. go list error: %v", err, stderr.String())
-	}
-	return strings.TrimSpace(stdout.String()), nil
-}
+func packageInWorkingDir() (string, error) { _ = "STUB: not implemented"; return "", nil }
 
-func gofmt(path string) error {
-	cmd := exec.Command("gofmt", "-w", path)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("go imports failed with %v for %q. Error: %v", err, path, stderr.String())
-	}
-	return nil
-}
+func gofmt(path string) error { _ = "STUB: not implemented"; return nil }
 
 func main() {
 	flag.Parse()
@@ -102,7 +44,6 @@ func main() {
 		log.Fatal("No CUDA-capable devices found")
 	}
 
-	// Get the lowest possible compute capability
 	major := int(^uint(0) >> 1)
 	minor := int(^uint(0) >> 1)
 	for d := 0; d < devices; d++ {
@@ -157,7 +98,6 @@ func main() {
 		}
 		m[name] = data
 
-		// Regex
 		var fns []string
 		matches := funcNameRegex.FindAllSubmatch(data, -1)
 		for _, bs := range matches {
@@ -173,13 +113,13 @@ func main() {
 package %v
 `, packageName)
 	buf.WriteString(header)
-	if ! *sameModule {
+	if !*sameModule {
 		buf.WriteString("import \"gorgonia.org/gorgonia\"\n")
 	}
 
 	buf.WriteString("func init() {\n")
 	for name := range m {
-		if ! *sameModule {
+		if !*sameModule {
 			buf.WriteString("gorgonia.")
 		}
 		buf.WriteString(fmt.Sprintf("AddToStdLib(%q, %sPTX, []string{\"%s\"})\n", name, name, strings.Join(funcs[name], "\", \"")))

@@ -13,12 +13,12 @@ type workflow struct {
 }
 
 type job struct {
-	JobID     string          //stable-go
-	JobName   string          //Build and test on latest stable Go release
-	RunsOn    string          //ubuntu-latest
-	GoVersion string          //1.15.x
-	Tags      map[string]bool // none:false, avx:true, sse:true
-	WithRace  bool            // false
+	JobID     string
+	JobName   string
+	RunsOn    string
+	GoVersion string
+	Tags      map[string]bool
+	WithRace  bool
 }
 
 const workflowTmpl = `## DO NOT EDIT - This file is generated

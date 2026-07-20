@@ -2,69 +2,27 @@ package main
 
 import (
 	"image"
-	"math"
 )
 
 type sli struct {
 	start, end, step int
 }
 
-func (s sli) Start() int { return s.start }
-func (s sli) End() int   { return s.end }
-func (s sli) Step() int  { return s.step }
+func (s sli) Start() int { _ = "STUB: not implemented"; return 0 }
+func (s sli) End() int   { _ = "STUB: not implemented"; return 0 }
+func (s sli) Step() int  { _ = "STUB: not implemented"; return 0 }
 
-func s(start int) sli {
-	return sli{
-		start: start,
-		end:   start + 1,
-		step:  0,
-	}
-}
+func s(start int) sli { _ = "STUB: not implemented"; return *new(sli) }
 
-func hasOne(a []float64) bool {
-	for _, v := range a {
-		if v == 1.0 {
-			return true
-		}
-	}
-	return false
-}
+func hasOne(a []float64) bool { _ = "STUB: not implemented"; return false }
 
-func avgF64s(a []float64) (retVal float64) {
-	for _, v := range a {
-		retVal += v
-	}
-	retVal /= float64(len(a))
-	return
-}
+func avgF64s(a []float64) (retVal float64) { _ = "STUB: not implemented"; return 0 }
 
 const numLabels = 10
 const pixelRange = 255
 
-func pixelWeight(px byte) float64 {
-	retVal := float64(px)/pixelRange*0.9 + 0.1
-	if retVal == 1.0 {
-		return 0.999
-	}
-	return retVal
-}
+func pixelWeight(px byte) float64 { _ = "STUB: not implemented"; return 0 }
 
-func reversePixelWeight(px float64) byte {
-	return byte((pixelRange*px - pixelRange) / 0.9)
-}
+func reversePixelWeight(px float64) byte { _ = "STUB: not implemented"; return 0 }
 
-func visualizeRow(x []float64) *image.Gray {
-	// since this is a square, we can take advantage of that
-	l := len(x)
-	side := int(math.Sqrt(float64(l)))
-	r := image.Rect(0, 0, side, side)
-	img := image.NewGray(r)
-
-	pix := make([]byte, l)
-	for i, px := range x {
-		pix[i] = reversePixelWeight(px)
-	}
-	img.Pix = pix
-
-	return img
-}
+func visualizeRow(x []float64) *image.Gray { _ = "STUB: not implemented"; return nil }

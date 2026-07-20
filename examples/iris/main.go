@@ -1,21 +1,15 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"log"
-	"math"
-	"os"
 
 	"github.com/go-gota/gota/dataframe"
-	"github.com/go-gota/gota/series"
 	"gonum.org/v1/gonum/mat"
 	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 
-// https://www.kaggle.com/amarpandey/implementing-linear-regression-on-iris-dataset/notebook
-//
 func main() {
 	g := gorgonia.NewGraph()
 	x, y := getXYMat()
@@ -36,8 +30,6 @@ func main() {
 
 	pred := must(gorgonia.Mul(X, theta))
 
-	// Gorgonia might delete values from nodes so we are going to save it
-	// and print it out later
 	var predicted gorgonia.Value
 	gorgonia.Read(pred, &predicted)
 
@@ -74,7 +66,7 @@ func main() {
 			cost.Value(),
 			accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64)))
 
-		machine.Reset() // Reset is necessary in a loop like this
+		machine.Reset()
 	}
 	fmt.Println("")
 	err = save(theta.Value())
@@ -84,98 +76,22 @@ func main() {
 
 }
 
-func accuracy(prediction, y []float64) float64 {
-	var ok float64
-	for i := 0; i < len(prediction); i++ {
-		if math.Round(prediction[i]-y[i]) == 0 {
-			ok += 1.0
-		}
-	}
-	return ok / float64(len(y))
-}
+func accuracy(prediction, y []float64) float64 { _ = "STUB: not implemented"; return 0 }
 
-func getXYMat() (*matrix, *matrix) {
-	f, err := os.Open("iris.csv")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	df := dataframe.ReadCSV(f)
+func getXYMat() (*matrix, *matrix) { _ = "STUB: not implemented"; return nil, nil }
 
-	toValue := func(s series.Series) series.Series {
-		records := s.Records()
-		floats := make([]float64, len(records))
-		m := map[string]int{}
-		for i, r := range records {
-			if _, ok := m[r]; !ok {
-				m[r] = len(m) + 1
-			}
-			floats[i] = float64(m[r])
-		}
-		return series.Floats(floats)
-	}
-
-	xDF := df.Drop("species")
-	yDF := df.Select("species").Capply(toValue)
-	numRows, _ := xDF.Dims()
-	xDF = xDF.Mutate(series.New(one(numRows), series.Float, "bias"))
-	fmt.Println(xDF.Describe())
-	fmt.Println(yDF.Describe())
-
-	return &matrix{xDF}, &matrix{yDF}
-}
-
-func getThetaNormal(x, y *matrix) *mat.Dense {
-	xt := mat.DenseCopyOf(x).T()
-	var xtx mat.Dense
-	xtx.Mul(xt, x)
-	var invxtx mat.Dense
-	invxtx.Inverse(&xtx)
-	var xty mat.Dense
-	xty.Mul(xt, y)
-	var output mat.Dense
-	output.Mul(&invxtx, &xty)
-
-	return &output
-}
+func getThetaNormal(x, y *matrix) *mat.Dense { _ = "STUB: not implemented"; return nil }
 
 type matrix struct {
 	dataframe.DataFrame
 }
 
-func (m matrix) At(i, j int) float64 {
-	return m.Elem(i, j).Float()
-}
+func (m matrix) At(i, j int) float64 { _ = "STUB: not implemented"; return 0 }
 
-func (m matrix) T() mat.Matrix {
-	return mat.Transpose{Matrix: m}
-}
+func (m matrix) T() mat.Matrix { _ = "STUB: not implemented"; return *new(mat.Matrix) }
 
-func must(n *gorgonia.Node, err error) *gorgonia.Node {
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
+func must(n *gorgonia.Node, err error) *gorgonia.Node { _ = "STUB: not implemented"; return nil }
 
-func one(size int) []float64 {
-	one := make([]float64, size)
-	for i := 0; i < size; i++ {
-		one[i] = 1.0
-	}
-	return one
-}
+func one(size int) []float64 { _ = "STUB: not implemented"; return nil }
 
-func save(value gorgonia.Value) error {
-	f, err := os.Create("theta.bin")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	enc := gob.NewEncoder(f)
-	err = enc.Encode(value)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+func save(value gorgonia.Value) error { _ = "STUB: not implemented"; return nil }

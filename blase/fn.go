@@ -6,23 +6,18 @@ package blase
 */
 import "C"
 
-import "unsafe"
-
 type fnargs struct {
 	fn C.cblasFn
 
-	// things common to most BLAS routines
 	order C.cblas_order
 	tA    C.cblas_transpose
 	tB    C.cblas_transpose
 
-	// things that needs to be passed to C in a very unsafe manner
 	a0 uintptr
 	a1 uintptr
 	a2 uintptr
 	a3 uintptr
 
-	// any integer parameters
 	i0 C.int
 	i1 C.int
 	i2 C.int
@@ -30,7 +25,6 @@ type fnargs struct {
 	i4 C.int
 	i5 C.int
 
-	// any float64 parameters
 	d0 C.double
 	d1 C.double
 	d2 C.double
@@ -38,7 +32,8 @@ type fnargs struct {
 }
 
 func (fn *fnargs) toCStruct() C.struct_fnargs {
-	return *(*C.struct_fnargs)(unsafe.Pointer(fn))
+	_ = "STUB: not implemented"
+	return *new(C.struct_fnargs)
 }
 
 type blasFn int

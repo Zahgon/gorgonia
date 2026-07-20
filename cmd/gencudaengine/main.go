@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"strings"
@@ -69,37 +67,9 @@ func init() {
 	cudaengloc = path.Join(gopath, "src/gorgonia.org/gorgonia/cuda")
 }
 
-func generateAriths() {
-	p := path.Join(cudaengloc, arithOut)
-	f, _ := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	fmt.Fprintf(f, "package cuda\n\n%v\n\n", genmsg)
+func generateAriths() { _ = "STUB: not implemented"; return }
 
-	for _, op := range ariths {
-		binopTmpl.Execute(f, op)
-	}
-
-	f.Close()
-	cmd := exec.Command("goimports", "-w", p)
-	if err := cmd.Run(); err != nil {
-		log.Fatalf("Go imports failed with %v for %q", err, p)
-	}
-}
-
-func generateCmps() {
-	p := path.Join(cudaengloc, cmpOut)
-	f, _ := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	fmt.Fprintf(f, "package cuda\n\n%v\n\n", genmsg)
-
-	for _, op := range cmps {
-		binopTmpl.Execute(f, op)
-	}
-
-	f.Close()
-	cmd := exec.Command("goimports", "-w", p)
-	if err := cmd.Run(); err != nil {
-		log.Fatalf("Go imports failed with %v for %q", err, p)
-	}
-}
+func generateCmps() { _ = "STUB: not implemented"; return }
 
 func main() {
 	generateAriths()

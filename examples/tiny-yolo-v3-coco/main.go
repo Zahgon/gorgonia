@@ -47,7 +47,6 @@ func main() {
 	tm := G.NewTapeMachine(g)
 	defer tm.Close()
 
-	// Feedforward
 	st := time.Now()
 	if err := tm.RunAll(); err != nil {
 		fmt.Printf("Can't run tape machine due the error: %s\n", err.Error())
@@ -55,7 +54,6 @@ func main() {
 	}
 	fmt.Println("Feedforwarded in:", time.Since(st))
 
-	// Postprocessing
 	st = time.Now()
 	dets, err := model.ProcessOutput(cocoClasses, scoreThreshold, iouThreshold)
 	if err != nil {

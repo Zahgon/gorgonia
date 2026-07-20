@@ -1,8 +1,6 @@
 package gorgonia
 
 import (
-	"fmt"
-	"strings"
 	"text/template"
 )
 
@@ -23,66 +21,30 @@ const exprNodeTemplText = `<
 </TABLE>
 >`
 
-func dotEscape(s string) string {
-	s = strings.Replace(s, "\n", "<BR />", -1)
-	s = strings.Replace(s, "<nil>", "NIL", -1)
-	return s
-}
+func dotEscape(s string) string { _ = "STUB: not implemented"; return "" }
 
-func printOp(n *Node) bool  { return n.op != nil && !n.isStmt }
-func isLeaf(n *Node) bool   { return len(n.children) == 0 }
-func isInput(n *Node) bool  { return n.isInput() }
-func isMarked(n *Node) bool { return n.ofInterest }
-func isRoot(n *Node) bool   { return n.isRoot() }
-func isStmt(n *Node) bool   { return n.isStmt }
-func hasShape(n *Node) bool { return n.shape != nil }
-func hasGrad(n *Node) bool  { _, err := n.Grad(); return err == nil }
-func opStr(n *Node) string  { return n.op.String() }
-func opType(n *Node) string { return n.op.Type().String() }
+func printOp(n *Node) bool  { _ = "STUB: not implemented"; return false }
+func isLeaf(n *Node) bool   { _ = "STUB: not implemented"; return false }
+func isInput(n *Node) bool  { _ = "STUB: not implemented"; return false }
+func isMarked(n *Node) bool { _ = "STUB: not implemented"; return false }
+func isRoot(n *Node) bool   { _ = "STUB: not implemented"; return false }
+func isStmt(n *Node) bool   { _ = "STUB: not implemented"; return false }
+func hasShape(n *Node) bool { _ = "STUB: not implemented"; return false }
+func hasGrad(n *Node) bool  { _ = "STUB: not implemented"; return false }
+func opStr(n *Node) string  { _ = "STUB: not implemented"; return "" }
+func opType(n *Node) string { _ = "STUB: not implemented"; return "" }
 
-func nodeType(n *Node) string {
-	if n.t == nil {
-		return "NIL"
-	}
-	return n.t.String()
-}
+func nodeType(n *Node) string { _ = "STUB: not implemented"; return "" }
 
-func overwritesInput(n *Node) int {
-	if n.op == nil {
-		return -1
-	}
-	return n.op.OverwritesInput()
-}
+func overwritesInput(n *Node) int { _ = "STUB: not implemented"; return 0 }
 
-func getShape(n *Node) string {
-	if !n.inferredShape {
-		return fmt.Sprintf("%v", n.shape)
-	}
-	return fmt.Sprintf("<U>%v</U>", n.shape) // graphviz 2.38+ only supports <O>
-}
+func getShape(n *Node) string { _ = "STUB: not implemented"; return "" }
 
-func getGrad(n *Node) string {
-	grad, err := n.Grad()
-	if err == nil {
-		return fmt.Sprintf("%+3.3s", grad)
-	}
-	return ""
-}
+func getGrad(n *Node) string { _ = "STUB: not implemented"; return "" }
 
-func getGradPtr(n *Node) string {
-	grad, err := n.Grad()
-	if err == nil && grad != nil {
-		return fmt.Sprintf("0x%x", grad.Uintptr())
-	}
-	return ""
-}
+func getGradPtr(n *Node) string { _ = "STUB: not implemented"; return "" }
 
-func getValPtr(n *Node) string {
-	if n.Value() == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("0x%dx", n.Value().Uintptr())
-}
+func getValPtr(n *Node) string { _ = "STUB: not implemented"; return "" }
 
 var funcMap = template.FuncMap{
 	"dotEscape":       dotEscape,

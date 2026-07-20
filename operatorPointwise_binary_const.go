@@ -3,16 +3,12 @@ package gorgonia
 import "gorgonia.org/tensor"
 
 var (
-	/* scalar-tensor float64 and vice versa */
-
-	// arith
 	tadd = denseBinOp(tensor.Add)
 	tsub = denseBinOp(tensor.Sub)
 	tmul = denseBinOp(tensor.Mul)
 	tdiv = denseBinOp(tensor.Div)
 	tpow = denseBinOp(tensor.Pow)
 
-	// cmp
 	tlt  = denseCmpOp(tensor.Lt)
 	tgt  = denseCmpOp(tensor.Gt)
 	tlte = denseCmpOp(tensor.Lte)
@@ -27,14 +23,12 @@ type denseCmpOp func(a, b interface{}, opts ...tensor.FuncOpt) (tensor.Tensor, e
 type ʘBinaryOperatorType byte
 
 const (
-	// arith
 	addOpType ʘBinaryOperatorType = iota
 	subOpType
 	mulOpType
 	divOpType
 	powOpType
 
-	// cmp
 	ltOpType
 	gtOpType
 	lteOpType
@@ -42,24 +36,19 @@ const (
 	eqOpType
 	neOpType
 
-	maxʘBinaryOpType // delimits the end of all possible binOpType
+	maxʘBinaryOpType
 )
 
-func (op ʘBinaryOperatorType) String() string {
-	return ʘBinOpStrs[op]
-}
+func (op ʘBinaryOperatorType) String() string { _ = "STUB: not implemented"; return "" }
 
-// ʘBinOpStrs is the string representation for a binOpType
-// It should be held constant.
 var ʘBinOpStrs = [maxʘBinaryOpType]string{
-	// arith ops
+
 	"+",
 	"-",
 	"⊙",
 	"÷",
 	"^",
 
-	// cmp ops
 	"<",
 	">",
 	"<=",
@@ -68,17 +57,14 @@ var ʘBinOpStrs = [maxʘBinaryOpType]string{
 	"!=",
 }
 
-// ʘBinOpNames is the string representation for a binOpType
-// It should be held constant.
 var ʘBinOpNames = [maxʘBinaryOpType]string{
-	// arith ops
+
 	"add",
 	"sub",
 	"mul",
 	"div",
 	"pow",
 
-	// cmp ops
 	"lt",
 	"gt",
 	"lte",
@@ -87,8 +73,6 @@ var ʘBinOpNames = [maxʘBinaryOpType]string{
 	"ne",
 }
 
-// ʘBinOpCommutative is the array that stores whether a binary operator is commutative
-// It should be held constant.
 var ʘBinOpCommutative = [maxʘBinaryOpType]bool{
 	true, false, true, false, false,
 	false, false, false, false, true, true,
@@ -104,40 +88,11 @@ var ʘBinOpDiffFns = [maxʘBinaryOpType]func(ctx ExecutionContext, x, y, z *Node
 	nondiffBinOp, nondiffBinOp, nondiffBinOp, nondiffBinOp, nondiffBinOp, nondiffBinOp,
 }
 
-// isCommutative gives info about whether the operator is commutative
-// For example:
-//		a + b == b + a
-// will ALWAYS evaluate to true. The same cannot be said about subtraction:
-// 		a - b != b - a
-// While a-b *may* be equal to b-a, it is not guaranteed. Therefore subtraction
-// is not commutative
-func (op ʘBinaryOperatorType) isCommutative() bool {
-	if op >= maxʘBinaryOpType {
-		panic("isCommutative() for unsupported BinOp undefined")
-	}
-	return ʘBinOpCommutative[op]
-}
+func (op ʘBinaryOperatorType) isCommutative() bool { _ = "STUB: not implemented"; return false }
 
-func (op ʘBinaryOperatorType) diffWRT(inputs int) []bool {
-	if inputs != 2 {
-		panic("binary operator only supports 2 inputs")
-	}
+func (op ʘBinaryOperatorType) diffWRT(inputs int) []bool { _ = "STUB: not implemented"; return nil }
 
-	if op.isArith() {
-		return []bool{true, true}
-	}
-	return []bool{false, false}
-}
-
-// isArith indicates if the binary operator is an arithmetic type
-func (op ʘBinaryOperatorType) isArith() bool {
-	switch op {
-	case addOpType, subOpType, mulOpType, divOpType, powOpType:
-		return true
-	default:
-		return false
-	}
-}
+func (op ʘBinaryOperatorType) isArith() bool { _ = "STUB: not implemented"; return false }
 
 var binOps = [maxʘBinaryOpType]*denseBinOp{
 	&tadd,
@@ -145,20 +100,20 @@ var binOps = [maxʘBinaryOpType]*denseBinOp{
 	&tmul,
 	&tdiv,
 	&tpow,
-	nil, // lt
-	nil, // gt
-	nil, // lte
-	nil, // gte
-	nil, // eq
-	nil, // ne
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
 }
 
 var cmpOps = [maxʘBinaryOpType]*denseCmpOp{
-	nil, // add
-	nil, // sub
-	nil, // mul
-	nil, // div
-	nil, // pow
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
 	&tlt,
 	&tgt,
 	&tlte,

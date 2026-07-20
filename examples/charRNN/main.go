@@ -20,16 +20,13 @@ import (
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var memprofile = flag.String("memprofile", "", "write memory profile to this file")
 
-// prediction params
 var softmaxTemperature = 1.0
 var maxCharGen = 100
 
-// various global variable inits
 var epochSize = -1
 var inputSize = -1
 var outputSize = -1
 
-// gradient update stuff
 var l2reg = 0.000001
 var learnrate = 0.01
 var clipVal = 5.0
@@ -42,17 +39,8 @@ type contextualError interface {
 }
 
 func cleanup(sigChan chan os.Signal, doneChan chan bool, profiling bool) {
-	select {
-	case <-sigChan:
-		log.Println("EMERGENCY EXIT!")
-		if profiling {
-			pprof.StopCPUProfile()
-		}
-		os.Exit(1)
-
-	case <-doneChan:
-		return
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 func main() {
@@ -63,15 +51,10 @@ func main() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
-	// intercept Ctrl+C
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	doneChan := make(chan bool, 1)
-	// defer func() {
-	// 	nn, cc, ec := T.GraphCollisionStats()
-	// 	log.Printf("COLLISION COUNT: %d/%d. Expected : %d", cc, nn, ec)
-	// }()
 
 	var profiling bool
 	if *cpuprofile != "" {
@@ -92,8 +75,7 @@ func main() {
 	start := time.Now()
 	eStart := start
 	for i := 0; i <= 100000; i++ {
-		// log.Printf("Iter: %d", i)
-		// _, _, err := m.run(i, solver)
+
 		cost, perp, err := run(r, i, solver)
 		if err != nil {
 			panic(fmt.Sprintf("%+v", err))

@@ -3,8 +3,6 @@ package main
 import (
 	"io"
 	"os"
-	"strings"
-	"text/template"
 )
 
 const (
@@ -55,54 +53,10 @@ func main() {
 }
 
 func generateWorkflow(w io.Writer, workflowName, runnerName, runsOn string, tags map[string]bool, withRace bool) error {
-	tmpl, err := template.New("workflow").Funcs(template.FuncMap{
-		"mapToList":       mapToList,
-		"hasExperimental": hasExperimental,
-	}).Parse(workflowTmpl)
-	if err != nil {
-		panic(err)
-	}
-
-	return tmpl.Execute(w, workflow{
-		WorkflowName: workflowName,
-		Jobs: []job{
-			{
-				JobID:     "stable-go",
-				JobName:   "Build and test on latest stable Go release - " + runnerName,
-				RunsOn:    runsOn,
-				GoVersion: latestGo,
-				Tags:      tags,
-				WithRace:  withRace,
-			},
-			{
-				JobID:     "previous-go",
-				JobName:   "Build and test on previous stable Go release - " + runnerName,
-				RunsOn:    runsOn,
-				GoVersion: previousGo,
-				Tags:      tags,
-				WithRace:  withRace,
-			},
-		},
-	})
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func mapToList(m map[string]bool) string {
-	var b strings.Builder
-	for tag := range m {
-		b.WriteString(tag)
-		b.WriteString(",")
-	}
-	s := b.String()   // no copying
-	s = s[:b.Len()-1] // no copying (removes trailing ", ")
-	return s
+func mapToList(m map[string]bool) string { _ = "STUB: not implemented"; return "" }
 
-}
-
-func hasExperimental(m map[string]bool) bool {
-	for _, ok := range m {
-		if ok {
-			return true
-		}
-	}
-	return false
-}
+func hasExperimental(m map[string]bool) bool { _ = "STUB: not implemented"; return false }

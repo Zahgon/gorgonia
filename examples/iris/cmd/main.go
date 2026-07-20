@@ -1,14 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"encoding/gob"
 	"fmt"
 	"log"
 	"math"
 	"os"
-	"strconv"
-	"strings"
 
 	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
@@ -58,15 +55,4 @@ func main() {
 	}
 }
 
-func getInput(s string) float64 {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("%v: ", s)
-	text, _ := reader.ReadString('\n')
-	text = strings.TrimSpace(text)
-
-	input, err := strconv.ParseFloat(text, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return input
-}
+func getInput(s string) float64 { _ = "STUB: not implemented"; return 0 }
